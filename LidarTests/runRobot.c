@@ -17,13 +17,13 @@
 #include "lidarReadings.h"
 #include "lidarProcessor.h"
 #include "redisFunctions.h"
-#include "driveCommand.h"
 #include "closedLoop.h"
+#include "driveCommand.h"
 #include "../wiringPiTest/driveControl.h"
 
 #define NUM_THREADS 4
 
-#define BOT_CENTER_OFFSET 0.07
+#define BOT_CENTER_OFFSET 0.05
 
 pthread_mutex_t waypointListLock;
 LINKEDNODE* waypointList;
@@ -33,6 +33,8 @@ int notDead = 1;
 position currPos;
 
 extern int lidarProcessCounts;
+
+char* reachedDestination = "Reached Destination";
 
 void* driver(void* nothing);
 
@@ -114,8 +116,6 @@ void* driver(void* nothin) {
 
     pthread_mutex_lock(&waypointListLock);
 
-    printf("Distance: %f\n", distance(&currPos, &(nextNode->node->pos)));
-
     //if not within certain threshhold of destination
     if (nextNode != NULL && distance(&currPos, &(nextNode->node->pos)) > AT_DESTINATION_THRESH) {
       //insert driving code here
@@ -124,8 +124,14 @@ void* driver(void* nothin) {
       printf("reached next node\n");
       //you've reached next node, pop item
       waypointList = waypointList->next;
+      free(nextNode->node);
       free(nextNode);
-    } if (nextNode == NULL) {
+      if (waypointList == NULL) {
+        printf("at destination\n");
+        redisLog(reachedDestination);
+        stopDriving();
+      }
+    } else {
       printf("at destination\n");
       stopDriving();
     }
@@ -143,51 +149,60 @@ void* driver(void* nothin) {
 }
 
 void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
-  double center_x, botDirection, relativeDirection, direction;
+  double center_x, botDirection, relativeDirection, direction, speed, distance;
   position relativeNextPoint;
   position* nextPos = &(nextPoint->node->pos);
 
-  botDirection = RAD(currPos->direction + 90);
+  botDirection = RAD(currPos->direction - 90);
 
   relativeNextPoint.x = (nextPos->x - currPos->x) * cos(-botDirection)
       - (nextPos->y - currPos->y) * sin(-botDirection);
   relativeNextPoint.y = (nextPos->x - currPos-> x) * sin(-botDirection)
       + (nextPos->y - currPos->y) * cos(-botDirection);
 
+  distance = sqrt(relativeNextPoint.x * relativeNextPoint.x
+    + relativeNextPoint.y * relativeNextPoint.y);
+
   //if facing wrong direction, pivot
-  relativeDirection = atan2(relativeNextPoint.y, relativeNextPoint.x)
+  relativeDirection = 90 - atan2(relativeNextPoint.y, relativeNextPoint.x)
       * 180 / PI;
 
   printf("Next point: heading %0.2f, relative position: (%0.2f, %0.2f)\n",
-      directionDiff,
+      relativeDirection,
       relativeNextPoint.x,
       relativeNextPoint.y);
 
   //pivot calls
-  if (relativeDirection > 35) {
+  if (relativeDirection > 80) {
     printf("Pivot left!\n");
     pivot(-0.1);
-  } else if (relativeDirection < -35) {
+  } else if (relativeDirection < -80) {
     printf("Pivot right!\n");
     pivot(0.1);
   } else {
     //drive forward-ish
     //rotate relativeNextPoint
     
-    if (relativeNextPoint.x > 0.05) {
+    if (abs(relativeDirection) > 5) {
       //calculate circle to get to next point
       center_x = (relativeNextPoint.x * relativeNextPoint.x
           + relativeNextPoint.y * relativeNextPoint.y)
           / (2 * relativeNextPoint.x);
 
-      direction = halfWheelDistance / center_x * 3;
+      direction = halfWheelDistance / center_x * 15;
     } else {
       direction = 0;
     }
 
     printf("center_x = %.2f, direction = %.2f, Drive forward: %.2f\n", center_x, direction, (float) (direction + BOT_CENTER_OFFSET));
 
-    setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
+    if (distance < 50) {
+      speed = 0.13;
+    } else {
+      speed = 0.2;
+    }
+
+    setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), speed);
     //setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
   }
 }
