@@ -65,3 +65,7 @@ header#menu-wrapper ul a li {
   margin-bottom: 1em;
   line-height: 1.5em;
 }
+.content ul,
+.content ol {
+  padding-left: 1.8em;
+}
