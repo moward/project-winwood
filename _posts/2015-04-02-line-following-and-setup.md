@@ -23,8 +23,6 @@ For the line-following circuit we used three IR emitters and three IR transistor
 
 The video below shows the finished line-following robot on a small track.
 
-^[VIDEO][]
-
-^[http://www.youtube.com/embed/3UmC6acEHk0](YouTube)
+^[Demo][VIDEO]
 
 [VIDEO]: https://www.youtube.com/watch?v=0VtZT9dBhiI
