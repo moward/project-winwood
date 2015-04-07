@@ -42,10 +42,10 @@ The driving logic is the last and most complicated part of the project. Our vehi
 We will design and implement use cases, such as the ones described above and test our vehicles for reliability, efficiency, and safety. We will measure reliability by performing the same use case repeatedly with different initial configurations. We will measure efficiency as the time it takes for a vehicle to get to its destination (travel time), energy consumption (current draw or the integral of voltage applied) and required road distance per vehicle (for the driving in a line scenario). We will quantify safety as the minimum distance between two vehicles and between vehicles and obstacles.
 
 ##Deliverables:
-**Milestone (Week) 1:** Create a line-following vehicle using the beagleboard and ROS that is able to navigate to given waypoints on a multi-lane track - April 2nd
+**Milestone (Week) 1:** Create a line-following vehicle using the beagleboard and ROS that is able to navigate to given waypoints on a multi-lane track *- April 2nd*
 
-**Milestone (Week) 2:** Create a set of vehicles that is able to navigate in a model world using environmental sensory information (LIDAR, hall-effect coded environment, or other) - April 9th
+**Milestone (Week) 2:** Create a set of vehicles that is able to navigate in a model world using environmental sensory information (LIDAR, hall-effect coded environment, or other) *- April 9th*
 
-**Milestone (Week) 3:** Extend vehicles to drive together and to wirelessly negotiate on several traffic scenarios - April 16th
+**Milestone (Week) 3:** Extend vehicles to drive together and to wirelessly negotiate on several traffic scenarios *- April 16th*
 
-**Reach:** Implement P2P, decentralized communication between the vehicles - April 23rd
+**Reach:** Implement P2P, decentralized communication between the vehicles *- April 23rd*
