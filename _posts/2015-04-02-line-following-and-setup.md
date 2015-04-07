@@ -11,11 +11,11 @@ We needed to set up our BeagleBone Black and test measuring inputs and setting u
 
 For the line-following circuit we used three IR emitters and three IR transistors. The circuit operats by emitting IR, which is then either reflected back by the white floor, or absorbed by the black line. The transistors are then either in saturation and result in a smaller voltage drop or they are in the triode region and there is a larger voltage drop. Based on the voltages after the transistors, we could determine which transistors were over the line and we could use the analog input pins to then direct the robot as needed. The circuit can be seen in the pictures below. 
 
-![PIC1][]
+![Front view of Line-Follower][PIC1]
 
 [PIC1]: https://github.com/moward/project-winwood/blob/gh-pages/images/Line-follower-pic-1.jpg?raw=true "Front view of Line-Follower"
 
-![PIC2][]
+![Line-Follower][PIC2]
 
 [PIC2]: https://github.com/moward/project-winwood/blob/gh-pages/images/Line-follower-pic-2.jpg?raw=true
 
@@ -23,6 +23,6 @@ For the line-following circuit we used three IR emitters and three IR transistor
 
 The video below shows the finished line-following robot on a small track.
 
-^[https://www.youtube.com/watch?v=0VtZT9dBhiI][]
+^[][VIDEO]
 
 [VIDEO]: https://www.youtube.com/watch?v=0VtZT9dBhiI
