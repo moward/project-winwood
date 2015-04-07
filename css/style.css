@@ -9,6 +9,12 @@ body {
   font-family: 'Lora', serif;
   font-size: 14pt;
 }
+a,
+a:active,
+a:visited {
+  color: #416bd8;
+  text-decoration: none;
+}
 header#page-header {
   background-color: #6b8ce1;
   height: 116px;

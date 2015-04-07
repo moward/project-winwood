@@ -16,6 +16,13 @@ body {
   font-size: 14pt;
 }
 
+a {
+  &, &:active, &:visited {
+    color: @nice-blue;
+    text-decoration: none;
+  }
+}
+
 header#page-header {
   background-color: lighten(@nice-blue, 10%);
   height: 116px;
