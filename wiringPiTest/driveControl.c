@@ -12,9 +12,8 @@ int configureDriveIO () {
   pinMode(LEFT_WHEEL_IN2, OUTPUT);
   pinMode(RIGHT_WHEEL_IN1, OUTPUT);
   pinMode(RIGHT_WHEEL_IN2, OUTPUT);
-  softPwmCreate (LEFT_WHEEL_PWM, 0, 100)
+  softPwmCreate (LEFT_WHEEL_PWM, 0, 100);
   softPwmCreate (RIGHT_WHEEL_PWM, 0, 100);
-  softPwmWrite(LEFT_WHEEL_PWM, 50);
 }
 
 int setDirectionVelocity (float direction, float forwardVelocity) {
@@ -25,11 +24,10 @@ int setDirectionVelocity (float direction, float forwardVelocity) {
     return 0;
   }
   //set wheel velocities
+  //
   //default to edge case of straight travel
-  float leftVelocity = forwardVelocity;
-  float rightVelocity = forwardVelocity;
-
-  printf("(%f,%f)\n", leftVelocity, rightVelocity);
+  float leftVelocity = forwardVelocity / 2;
+  float rightVelocity = forwardVelocity / 2;
   
   //handle general case
   if (fabs(direction) > 0.05) {
@@ -42,14 +40,13 @@ int setDirectionVelocity (float direction, float forwardVelocity) {
 
       float omega = forwardVelocity / radius;
       
-      leftVelocity = omega * (radius - halfWheelDistance) / 2;
-      rightVelocity = omega * (radius + halfWheelDistance) / 2;
+      leftVelocity = omega * (radius + halfWheelDistance) / 2;
+      rightVelocity = omega * (radius - halfWheelDistance) / 2;
   }
 
   //console.log('Velocities: (' + leftVelocity + ', '
   //    + rightVelocity + ')');
   //    
-  printf("(%f,%f)\n", leftVelocity, rightVelocity);
   
   //set H-bridge values
   if (fabs(leftVelocity) < 0.05) {
@@ -87,7 +84,7 @@ int setDirectionVelocity (float direction, float forwardVelocity) {
     abs((int) (rightVelocity * 100)));
 
   softPwmWrite(LEFT_WHEEL_PWM, abs((int) (leftVelocity * 100)));
-  softPwmWrite(RIGHT_WHEEL_PWM, abs((int) (leftVelocity * 100)));
+  softPwmWrite(RIGHT_WHEEL_PWM, abs((int) (rightVelocity * 100)));
 
   return 1;
 }
