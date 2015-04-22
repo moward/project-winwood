@@ -56,11 +56,15 @@ We created a list of pros and cons for each of the navigation ideas, trading off
 
 With a more promising plan for a navigation system in mind, we revisited the high level design of our control system for the robot. A block diagram of this design is displayed below:
 
-![Block Diagram](/images/block-diagrem-4-21.png)
+![Block Diagram](/images/block-diagram-4-21.png)
+
+We will use a Redis server running on a laptop to pass information between robots and between robots and the user console. We will write code for each robot in C/C++. The code will consist of a Redis client, a Lidar Reader, a localization algorithm, and a planner than decides where the robot goes. On the laptop, there will be a web-based user console running in a Node.js web app that will allow the user to enter commands, visualize the robot's data processing, and get logging and feedback information.
 
 ###Baseline for Friday, April 24th
+The baseline assignment will be to get one robot to be able to use the lidar to determine its position on the track and to navigate when given commands from the user console.
 
-###Reach for Friday, May 1st
+###Reach Goal for Friday, May 1st
+The reach goal will be to have multiple robots communicate via the centralized server and to negotiate in traffic scenarios.
 
 ##Lessons Learned
  - Opt to use technologies that are well supported in the community.
