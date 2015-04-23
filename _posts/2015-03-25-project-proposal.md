@@ -4,8 +4,8 @@ title: Project Proposal
 ---
 
 ##Team:
-Matthew Howard, lead on software modelling and wireless comm.
-Chris Champagne, lead on sensing and actuation
+- Matthew Howard, lead on software modelling and wireless comm.
+- Chris Champagne, lead on sensing and actuation
 
 ##Motivation:
 Automotive traffic congestion leads to inefficient use of transportation infrastructure, unnecessary energy costs, increased greenhouse gas emissions, and increased travel times. These problems also lead to secondary yet significant effects including the need for additional highways and lanes, magnifying traffic congestion’s environmental and economic footprint. We posit that much of this congestion can be eliminated by automating both driving and the exchange of information between vehicles sharing the road.

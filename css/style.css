@@ -38,29 +38,6 @@ header#page-header div#page-header-wrapper #header-title {
   margin: 70px 0 0 0.5em;
   font-size: 1.8em;
 }
-header#menu-wrapper {
-  background-color: #2751bf;
-}
-header#menu-wrapper ul {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 800px;
-  display: block;
-}
-header#menu-wrapper ul a {
-  color: white;
-  text-decoration: none;
-  font-family: 'Roboto', sans-serif;
-  font-weigth: 500;
-  line-height: 2em;
-}
-header#menu-wrapper ul a:not(:first-child) {
-  margin-left: 1em;
-}
-header#menu-wrapper ul a li {
-  display: inline-block;
-  list-style: none;
-}
 .content {
   margin-left: auto;
   margin-right: auto;
