@@ -1,0 +1,16 @@
+extends layout
+
+block head
+  link(rel='stylesheet', href='/stylesheets/main.css')
+  script(src='/socket.io/socket.io.js')
+  script(src='https://www.google.com/jsapi')
+  script(src='/javascripts/main.js')
+
+block content
+  div.consoleContainer
+    h2 Console
+    div.console-output
+    input.console-input(type='text')
+  div.graphContainer
+    h2 Graph
+    div#graph
