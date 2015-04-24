@@ -1,3 +1,4 @@
 node-console/node_modules
 *.o
 *.s
+LidarTests/runRobot

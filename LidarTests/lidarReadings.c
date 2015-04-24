@@ -33,7 +33,7 @@ void *readData (void *data) {
       printf ("Unable to open serial device\n") ;
       return;
   }
-  FILE *writeFile;
+  //FILE *writeFile;
   char buffer[1];
   char check_data[22];
   size_t checkSize;
@@ -53,7 +53,7 @@ void *readData (void *data) {
   serialFlush(fd);
   packetCount = 0;
   beginByte = 0;
-  writeFile = fopen(WRITE_FILE, "w");
+  //writeFile = fopen(WRITE_FILE, "w");
   while(1) {
       if(beginByte == 0) {
           //starting bit
@@ -98,8 +98,8 @@ void *readData (void *data) {
             dist2 = (dist2 & 0x3F) << 8;
             (*total_data).distance[packet_index * 4] = (dist1 + dist2);
             (*total_data).angle[packet_index * 4] = packet_index * 4;
-            fprintf(writeFile, "%d,", (dist1 + dist2));
-            fprintf(writeFile, "%d\n", (packet_index * 4));
+            //fprintf(writeFile, "%d,", (dist1 + dist2));
+            //fprintf(writeFile, "%d\n", (packet_index * 4));
           }
           else {
             (*total_data).distance[packet_index * 4] = 0;
@@ -116,8 +116,8 @@ void *readData (void *data) {
             dist2 = (dist2 & 0x3F) << 8;
             (*total_data).distance[packet_index * 4 + 1] = (dist1 + dist2);
             (*total_data).angle[packet_index * 4 + 1] = packet_index * 4 + 1;
-            fprintf(writeFile, "%d,", (dist1 + dist2));
-            fprintf(writeFile, "%d\n", (packet_index * 4 + 1));
+            //fprintf(writeFile, "%d,", (dist1 + dist2));
+            //fprintf(writeFile, "%d\n", (packet_index * 4 + 1));
           }
           else {
             (*total_data).distance[packet_index * 4 + 1] = 0;
@@ -134,8 +134,8 @@ void *readData (void *data) {
             dist2 = (dist2 & 0x3F) << 8;
             (*total_data).distance[packet_index * 4 + 2] = (dist1 + dist2);
             (*total_data).angle[packet_index * 4 + 2] = packet_index * 4 + 2;
-            fprintf(writeFile, "%d,", (dist1 + dist2));
-            fprintf(writeFile, "%d\n", (packet_index * 4 + 2));
+            //fprintf(writeFile, "%d,", (dist1 + dist2));
+            //fprintf(writeFile, "%d\n", (packet_index * 4 + 2));
           }
           else {
             (*total_data).distance[packet_index * 4 + 2] = 0;
@@ -152,8 +152,8 @@ void *readData (void *data) {
             dist2 = (dist2 & 0x3F) << 8;
             (*total_data).distance[packet_index * 4 + 3] = (dist1 + dist2);
             (*total_data).angle[packet_index * 4 + 3] = packet_index * 4 + 3;
-            fprintf(writeFile, "%d,", (dist1 + dist2));
-            fprintf(writeFile, "%d\n", (packet_index * 4 + 3));
+            //fprintf(writeFile, "%d,", (dist1 + dist2));
+            //fprintf(writeFile, "%d\n", (packet_index * 4 + 3));
           }
           else {
             (*total_data).distance[packet_index * 4 + 3] = 0;
@@ -189,20 +189,20 @@ void *readData (void *data) {
           else {
               printf("Checksum is wrong! \n");
               packetCount++;
-              printf("Calculated is %x but should be %x \n",calcCheck, (checksum[0] + (checksum[1] << 8)));
+              /*printf("Calculated is %x but should be %x \n",calcCheck, (checksum[0] + (checksum[1] << 8)));
               printf("1:fa    2:%x    3:%x    4:%x\n",packet_index + INDEX_START, speed[0], speed[1]);
               printf("5:%x   6:%x    7:%x    8:%x\n", data0[0],data0[1],data0[2],data0[3]);
               printf("9:%x    10:%x    11:%x    12:%x\n", data1[0],data1[1],data1[2],data1[3]);
               printf("13:%x    14:%x    15:%x    16:%x\n", data2[0],data2[1],data2[2],data2[3]);
-              printf("17:%x    18:%x    19:%x    20:%x\n", data3[0],data3[1],data3[2],data3[3]);
+              printf("17:%x    18:%x    19:%x    20:%x\n", data3[0],data3[1],data3[2],data3[3]);*/
               (*total_data).errorCount++;
           }
           if(packetCount == 90) {
             packetCount = 0;
             (*total_data).revolutionCount++;
-            printf("90 packets received!     ");
+            //printf("90 packets received!     ");
             computeRPMSpeed(speed[0], speed[1]);
-            printf("Ending RPM: %f\n", rpm_speed);
+            //printf("Ending RPM: %f\n", rpm_speed);
           }
       }
       else exit(0);

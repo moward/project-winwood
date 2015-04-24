@@ -21,9 +21,6 @@ void redisLog(char *message) {
   sprintf(buff, "%s: %s", robotName, message);
 
   reply = redisCommand(c, "PUBLISH stdlog %b\n", buff, strlen(buff));
-  //todo: remove
-  printf("PUBLISH: %lld\n", reply->integer);
-
   freeReplyObject(reply);
 }
 
@@ -33,8 +30,25 @@ void redisSetPosition(char *message) {
 }
 
 //Post robot's reading
-void redisPostReading(int* distances) {
+void redisPostReading(int* distances, int length) {
+  redisReply *reply;
+  //first, generate list of space-separated distances as a string
+  char distanceList[length * 5];
+  int i;
+  char* cursor = distanceList;
 
+  for (i = 0; i < length; i++) {
+    sprintf(cursor, "%d ", distances[i]);
+    cursor += strlen(cursor);
+  }
+
+  //generate push command
+  reply = redisCommand(c, "LTRIM %s.distances 0 0\r\n LPUSH %s", robotName, distanceList);
+
+  //todo: remove
+  printf("LTRIM %s.distances 0 0\r\n LPUSH %s", robotName, distanceList);
+
+  freeReplyObject(reply);
 }
 
 int openRedisConnection(char* serverIp, char* _robotName) {
