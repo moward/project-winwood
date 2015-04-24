@@ -24,16 +24,22 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  openRedisConnection(argv[1], argv[2]);
+  if(!openRedisConnection(argv[1], argv[2])) {
+    printf("Error starting Redis\n");
+    exit(1);
+  }
+
+  redisLog("Starting robot");
 
   wiringPiSetup ();
+
   pthread_t threads[NUM_THREADS];
   REVOLUTION_DATA total_data;
   total_data.revolutionCount = 0;
   total_data.errorCount = 0;
   int oldRevCount = 0;
   printf("creating thread\n");
-  pthread_create(&threads[0], NULL, readData, total_data);
+  pthread_create(&threads[0], NULL, readData, &total_data);
   while(total_data.revolutionCount < 50) {
     if(oldRevCount != total_data.revolutionCount) {
         oldRevCount = total_data.revolutionCount;

@@ -31,7 +31,7 @@ void *readData (void *data) {
   (*total_data).errorCount = 0;
   if ((fd = serialOpen (SERIAL_PORT, BAUD_RATE)) < 0) {
       printf ("Unable to open serial device\n") ;
-      return -1 ;
+      return;
   }
   FILE *writeFile;
   char buffer[1];

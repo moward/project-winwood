@@ -8,4 +8,4 @@ void redisSetPosition(char *message);
 //Post robot's reading
 void redisPostReading(int* distances);
 
-void openRedisConnection(char* serverIp, char* robotName);
+int openRedisConnection(char* serverIp, char* _robotName);
