@@ -43,17 +43,18 @@ void redisPostReading(int* distances, int length) {
     cursor += strlen(cursor);
   }
 
+  //increment counter
+  reply = redisCommand(c, "INCR %s.distancePosts", robotName);
+  freeReplyObject(reply);
+
+  //clear previous reading data
+  reply = redisCommand(c, "LTRIM %s.distances 0 0", robotName);
+  freeReplyObject(reply);
+
   //generate push command to buffer
   sprintf(pushCommand, "LPUSH %s.distances %s", robotName, distanceList);
-
-  //pipeline commands
-  redisAppendCommand(c, "INCR %s.distancePosts", robotName);
-  redisAppendCommand(c, "LTRIM %s.distances 0 0", robotName);
-  redisAppendCommand(c, pushCommand);
-
-  printf("%s\n", pushCommand);
-
-  redisGetReply(c, (void **) &reply);
+  reply = redisCommand(c, pushCommand);
+  //printf("(%lld) %s\n", reply->integer, pushCommand);
 
   freeReplyObject(reply);
 }
@@ -76,4 +77,3 @@ int openRedisConnection(char* serverIp, char* _robotName) {
 
   return 1;
 }
- 

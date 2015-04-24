@@ -20,7 +20,7 @@ void* processLidar(void* _lidar_data) {
 
     if (loopCount % 4 == 0) {
       redisPostReading(currDistances, NUM_READINGS);
-      printf("Posted reading to Redis server!\n");
+      //printf("Posted reading to Redis server!\n");
     }
 
     //todo: run regression stuff, get location
