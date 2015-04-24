@@ -34,6 +34,7 @@ void redisPostReading(int* distances, int length) {
   redisReply *reply;
   //first, generate list of space-separated distances as a string
   char distanceList[length * 5];
+  char pushCommand[length * 5 + 30];
   int i;
   char* cursor = distanceList;
 
@@ -42,11 +43,17 @@ void redisPostReading(int* distances, int length) {
     cursor += strlen(cursor);
   }
 
-  //generate push command
-  reply = redisCommand(c, "LTRIM %s.distances 0 0\r\n LPUSH %s", robotName, distanceList);
+  //generate push command to buffer
+  sprintf(pushCommand, "LPUSH %s.distances %s", robotName, distanceList);
 
-  //todo: remove
-  printf("LTRIM %s.distances 0 0\r\n LPUSH %s", robotName, distanceList);
+  //pipeline commands
+  redisAppendCommand(c, "INCR %s.distancePosts", robotName);
+  redisAppendCommand(c, "LTRIM %s.distances 0 0", robotName);
+  redisAppendCommand(c, pushCommand);
+
+  printf("%s\n", pushCommand);
+
+  redisGetReply(c, (void **) &reply);
 
   freeReplyObject(reply);
 }

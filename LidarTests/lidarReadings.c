@@ -102,8 +102,8 @@ void *readData (void *data) {
             //fprintf(writeFile, "%d\n", (packet_index * 4));
           }
           else {
-            (*total_data).distance[packet_index * 4] = 0;
-            (*total_data).angle[packet_index * 4] = 0;
+            (*total_data).distance[packet_index * 4] = -1;
+            (*total_data).angle[packet_index * 4] = -1;
           }
           //1
           for(i = 0; i < 4; i++) {
@@ -120,8 +120,8 @@ void *readData (void *data) {
             //fprintf(writeFile, "%d\n", (packet_index * 4 + 1));
           }
           else {
-            (*total_data).distance[packet_index * 4 + 1] = 0;
-            (*total_data).angle[packet_index * 4 + 1] = 0;
+            (*total_data).distance[packet_index * 4 + 1] = -1;
+            (*total_data).angle[packet_index * 4 + 1] = -1;
           }
           //2
           for(i = 0; i < 4; i++) {
@@ -138,8 +138,8 @@ void *readData (void *data) {
             //fprintf(writeFile, "%d\n", (packet_index * 4 + 2));
           }
           else {
-            (*total_data).distance[packet_index * 4 + 2] = 0;
-            (*total_data).angle[packet_index * 4 + 2] = 0;
+            (*total_data).distance[packet_index * 4 + 2] = -1;
+            (*total_data).angle[packet_index * 4 + 2] = -1;
           }
           //3
           for(i = 0; i < 4; i++) {
@@ -156,8 +156,8 @@ void *readData (void *data) {
             //fprintf(writeFile, "%d\n", (packet_index * 4 + 3));
           }
           else {
-            (*total_data).distance[packet_index * 4 + 3] = 0;
-            (*total_data).angle[packet_index * 4 + 3] = 0;
+            (*total_data).distance[packet_index * 4 + 3] = -1;
+            (*total_data).angle[packet_index * 4 + 3] = -1;
           }
           //checksum
           bytesRead = read(fd, buffer, singleByte);
