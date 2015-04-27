@@ -20,5 +20,7 @@ After laser cutting our first set of parts and assembling them, we realized that
 ## Setting Up the Lidar
 Once we assembled our first vehicle, we turned our attention toward reading in the data from the Lidar. We attached the Lidar sensor to the Raspberry Pi pins so it could read the data as the Lidar spins.  After writing a program in C to read in the packets of data, we found that the packets we were receiving were not well formed and did not have the expected values. We occasionally received the start byte but not as often as expected and if we did receive it, the checksum bytes did not match with the data.  We spent a good amount of time trying to figure out what was happening and we decided that the most likely problem was dropping bits or misreading from serial. We checked the baud rate to verify it was set properly for the serial connection and we tried using different C functions to read in the data. After various troubleshooting we managed to get all the data (well-formed) and the checksum bytes verified that our packets were now being properly read.
 
+![Data Picture](/images/LidarData.PNG)
+
 ## Continuing with the Lidar
 We now plan on continuing our tests with the Lidar module and plan to use the data to determine the vehicles' positions and orientation. 
