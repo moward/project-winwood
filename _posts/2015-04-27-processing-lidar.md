@@ -1,11 +1,11 @@
 ---
 layout: post
-title: Processing LIDAR data using a hough transform
+title: Processing LIDAR data using a Hough Transform
 ---
 
 ##Overview
 
-Once we got the [robot to read the LIDAR data successfully], we needed to process the data in order to use it to determine the robot's position. With our 4-walled rectangular field, we expected to use the readings of the walls to determine the robot's most likely position and orientation.
+Once we got the [robot to read the LIDAR data successfully](http://winwood.matt.how/2015/04/19/building-the-bot.html#setting-up-the-lidar), we needed to process the data in order to use it to determine the robot's position. With our 4-walled rectangular field, we expected to use the readings of the walls to determine the robot's most likely position and orientation.
 
 ##Original
 
@@ -15,10 +15,10 @@ The original plan was to use a [Least-Squares Linear Regression](http://en.wikip
 
 After some more research, we decided that a [Hough transform](http://en.wikipedia.org/wiki/Hough_transform) would be an excellent candidate for detecting the lines of our track boundary. A classical Hough transform (as opposed to the more complicated general version) essentially creates a distribution (called the Hough space) that represents the liklihood of any given line being represented in the image (or point-cloud in our case). For the ease of calculation and for its independence from the standard basis (coordinate axes), we parameterize these lines in terms of \\(r\\) and \\(\theta\\). After searching for a simple and easily accessible Hough transform algorithm written in C, we decided to write the algorithm from scratch.
 
-Line parametrization.
+Line Parametrization:
 \\[x \cos \theta + y \sin \theta = r\\]
 
-To ease in visualization, we also wrote a function that would convert the Hough space to a bitmap image (specifically a  grayscale NetPBM) that could be visualized. The image is a graph of \\(r\\), on the x-axis, measured in millimeters, versus \\(\theta\\), on the y-axis, measured in degrees. Thus, each pixel in the image represents a potential line represented in the point cloud. The darker the pixel, the more likely the line.
+To ease in visualization, we also wrote a function that would convert the Hough space to a bitmap image (specifically a  grayscale [NetPBM](http://en.wikipedia.org/wiki/Netpbm_format)) that could be visualized. The image is a graph of \\(r\\), on the x-axis, measured in millimeters, versus \\(\theta\\), on the y-axis, measured in degrees. Thus, each pixel in the image represents a potential line represented in the point cloud. The darker the pixel, the more likely the line.
 
 ##References
  - [More on the Hough transform](http://homepages.inf.ed.ac.uk/rbf/HIPR2/hough.htm)
