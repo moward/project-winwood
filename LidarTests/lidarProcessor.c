@@ -32,7 +32,36 @@ void* processLidar(void* _lidar_data) {
   }
 }
 
-line* houghTransform(REVOLUTION_DATA* lidar_data) {
+/* Creates a PGB Grayscale bitmap file from the given accumulator 
+ * Note: result must be freed afterwards
+ */
+char* outputNetPBM(unsigned short int * accumulator){
+  int i, length;
+  char* buffer = malloc(RANGE_R * RANGE_THETA * 5;
+
+  if (!buffer) {
+    //could not allocate memory
+    return NULL;
+  }
+
+  //file header
+  length += sprintf(buffer + length, "P2\n%d %d\n255", RANGE_R, RANGE_THETA);
+
+  for (i = 0; i < RANGE_R * RANGE_THETA; i++) {
+    if (i % RANGE_R == 0) {
+      length += sprintf(buffer + length, "\n", accumulator[i]);
+    } else {
+      length += sprintf(buffer + length, " ", accumulator[i]);
+    }
+   length += sprintf(buffer + length, "%3hu", accumulator[i]);
+  }
+
+  length += sprintf(buffer + length, "\n", accumulator[i]);
+
+  return buffer;
+}
+
+line** houghTransform(REVOLUTION_DATA* lidar_data) {
   int i, j, r;
   double rho, x, y, m, c, s;
 
@@ -55,7 +84,6 @@ line* houghTransform(REVOLUTION_DATA* lidar_data) {
       for (j = 0; j < RANGE_THETA; j++) {
         //get perpendicular slope
         m = tan(RAD(j + 90));
-        //find perpendicular distance
         //basic strategy is to convert to general linear form and use perpendicular distance formula
         //constant term of general linear form
         c = y - m * x;
@@ -75,26 +103,73 @@ line* houghTransform(REVOLUTION_DATA* lidar_data) {
         }
       }
     }
-
-    //printf("Finished reading %d\n", i);
   }
-
-  //print Portable GrayMap
-  //header information
-  printf("P2\n%d %d\n255", RANGE_R, RANGE_THETA);
-
-  for (i = 0; i < RANGE_R * RANGE_THETA; i++) {
-    if (i % RANGE_R == 0) {
-      putc('\n', stdout);
-    } else {
-      putc(' ', stdout);
-    }
-    printf("%3hu", accumulator[i]);
-  }
-
-  putc('\n', stdout);
 
   //todo: detect lines
   return NULL;
 }
 
+/*
+ * Based on last given position and lines from hough transform, give the most
+ * likely current
+ * odometry
+ */
+int getRobotPosition(position* current, line** bounds) {
+  int l1, l2, m1, m2, bestL2;
+  double currError, dTheta, x, y, theta, m;
+  double bestError = 365 * 365 * 2;
+  cartesian_line l, m;
+
+  line midLine1, midLine2;
+
+  //get parallel lines
+  l1 = l2 = 1;
+  for (l2 = 1; l2 < 4; l2++) {
+    //make m1 and m2 remaining
+    m1 = (l2 + 1) % 3 + 1;
+    m2 = l2 % 3 + 1;
+
+    //add error of l1 and l2
+    dTheta = fabs(bounds[l1]->theta - bounds[l2]->theta);
+    if (dTheta > 180) {
+      dTheta = 360 - dTheta;
+    }
+    currError = dTheta * dTheta;
+
+    //add error of m1 and m2
+    dTheta = fabs(bounds[m1]->theta - bounds[m2]->theta);
+    if (dTheta > 180) {
+      dTheta = 360 - dTheta;
+    }
+    currError += dTheta * dTheta;
+
+    if (currError < bestError) {
+      bestError = currError;
+      bestL2 = l2;
+    }
+  }
+
+  printf("bestError: %f\n", bestError);
+
+  //find first line
+  x = (bounds[l1].r * cos(RAD(bounds[l1].theta)) + bounds[l2].r * cos(RAD(bounds[l2].theta)))/2;
+  y = (bounds[l1].r * sin(RAD(bounds[l1].theta)) + bounds[l2].r * sin(RAD(bounds[l2].theta)))/2;
+
+  theta = ((bounds[l1].theta + bounds[l2].theta + 360) % 180) / 2;
+
+  l.m = tan(RAD(theta));
+
+  l.y = y - x * (l.m);
+
+  //find second line
+  x = (bounds[m1].r * cos(RAD(bounds[m1].theta)) + bounds[m2].r * cos(RAD(bounds[m2].theta)))/2;
+  y = (bounds[m1].r * sin(RAD(bounds[m1].theta)) + bounds[m2].r * sin(RAD(bounds[m2].theta)))/2;
+
+  theta = ((bounds[m1].theta + bounds[m2].theta + 360) % 180) / 2;
+
+  m.m = tan(RAD(theta));
+
+  m.y = y - x * (m.m);
+
+  return 1;
+}
