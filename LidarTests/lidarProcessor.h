@@ -20,7 +20,7 @@ typedef struct line {
 typedef struct cartesian_line {
   double y; //expressed in millimeters
   double m;
-} line;
+} cartesian_line;
 
 typedef struct position {
   double x;

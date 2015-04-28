@@ -35,17 +35,16 @@ void* processLidar(void* _lidar_data) {
 /* Creates a PGB Grayscale bitmap file from the given accumulator 
  * Note: result must be freed afterwards
  */
-char* outputNetPBM(unsigned short int * accumulator){
+char* outputNetPBM(unsigned short int* accumulator){
   int i, length;
-  char* buffer = malloc(RANGE_R * RANGE_THETA * 5;
-
+  char* buffer = malloc(RANGE_R * RANGE_THETA * 5);
   if (!buffer) {
     //could not allocate memory
     return NULL;
   }
 
   //file header
-  length += sprintf(buffer + length, "P2\n%d %d\n255", RANGE_R, RANGE_THETA);
+  length = sprintf(buffer, "P2\n%d %d\n255", RANGE_R, RANGE_THETA);
 
   for (i = 0; i < RANGE_R * RANGE_THETA; i++) {
     if (i % RANGE_R == 0) {
@@ -53,7 +52,7 @@ char* outputNetPBM(unsigned short int * accumulator){
     } else {
       length += sprintf(buffer + length, " ", accumulator[i]);
     }
-   length += sprintf(buffer + length, "%3hu", accumulator[i]);
+    length += sprintf(buffer + length, "%3hu", accumulator[i]);
   }
 
   length += sprintf(buffer + length, "\n", accumulator[i]);
@@ -64,6 +63,7 @@ char* outputNetPBM(unsigned short int * accumulator){
 line** houghTransform(REVOLUTION_DATA* lidar_data) {
   int i, j, r;
   double rho, x, y, m, c, s;
+  char* pgmOutput;
 
   //hough accumulator
   unsigned short int accumulator[RANGE_R * RANGE_THETA];
@@ -82,28 +82,37 @@ line** houghTransform(REVOLUTION_DATA* lidar_data) {
 
       //for j in [0, 180], add line through point to accumulator
       for (j = 0; j < RANGE_THETA; j++) {
-        //get perpendicular slope
-        m = tan(RAD(j + 90));
-        //basic strategy is to convert to general linear form and use perpendicular distance formula
-        //constant term of general linear form
-        c = y - m * x;
+        //only consider angles that will orient correctly with the current point
+        if ((j - i + 270) % 360 < 180) {
+          //get perpendicular slope
+          m = tan(RAD(j + 90));
+          //basic strategy is to convert to general linear form and use perpendicular distance formula
+          //constant term of general linear form
+          c = y - m * x;
 
-        //radius to nearest point of perpendicular line
-        s = fabs(c) / sqrt(m * m + 1);
+          //radius to nearest point of perpendicular line
+          s = fabs(c) / sqrt(m * m + 1);
 
-        /*if ((int) s == 224 && j == 14) {
-          printf("distance[%d] = %d\n", i, r);
-          //printf(" = (%f, %f)\n", x, y);
-          printf("ACCUM_PT(%d, %d), m = %f, c = %f, RAD(j + 90) = %f\n\n", ((int) s), j, m, c, RAD(j + 90));
-        }*/
+          /*if ((int) s == 224 && j == 14) {
+            printf("distance[%d] = %d\n", i, r);
+            //printf(" = (%f, %f)\n", x, y);
+            printf("ACCUM_PT(%d, %d), m = %f, c = %f, RAD(j + 90) = %f\n\n", ((int) s), j, m, c, RAD(j + 90));
+          }*/
 
-        //increment point corresponding to current line
-        if (s < RANGE_R) {
-          ACCUM_PT(((int) s), j)++;
+          //increment point corresponding to current line
+          if (s < RANGE_R) {
+            ACCUM_PT(((int) s), j)++;
+          }
         }
       }
     }
   }
+
+  pgmOutput = outputNetPBM(accumulator);
+
+  printf("%s", pgmOutput);
+
+  free(pgmOutput);
 
   //todo: detect lines
   return NULL;
@@ -116,7 +125,7 @@ line** houghTransform(REVOLUTION_DATA* lidar_data) {
  */
 int getRobotPosition(position* current, line** bounds) {
   int l1, l2, m1, m2, bestL2;
-  double currError, dTheta, x, y, theta, m;
+  double currError, dTheta, x, y, theta;
   double bestError = 365 * 365 * 2;
   cartesian_line l, m;
 
@@ -152,20 +161,33 @@ int getRobotPosition(position* current, line** bounds) {
   printf("bestError: %f\n", bestError);
 
   //find first line
-  x = (bounds[l1].r * cos(RAD(bounds[l1].theta)) + bounds[l2].r * cos(RAD(bounds[l2].theta)))/2;
-  y = (bounds[l1].r * sin(RAD(bounds[l1].theta)) + bounds[l2].r * sin(RAD(bounds[l2].theta)))/2;
+  x = (bounds[l1]->r * cos(RAD(bounds[l1]->theta))
+      + bounds[l2]->r * cos(RAD(bounds[l2]->theta)))/2;
+  y = (bounds[l1]->r * sin(RAD(bounds[l1]->theta))
+      + bounds[l2]->r * sin(RAD(bounds[l2]->theta)))/2;
 
-  theta = ((bounds[l1].theta + bounds[l2].theta + 360) % 180) / 2;
+  //get arithmetic average of angles
+  theta = bounds[l1]->theta + bounds[l2]->theta;
+  while (theta > 180) {
+    theta -= 180;
+  }
 
   l.m = tan(RAD(theta));
 
   l.y = y - x * (l.m);
 
   //find second line
-  x = (bounds[m1].r * cos(RAD(bounds[m1].theta)) + bounds[m2].r * cos(RAD(bounds[m2].theta)))/2;
-  y = (bounds[m1].r * sin(RAD(bounds[m1].theta)) + bounds[m2].r * sin(RAD(bounds[m2].theta)))/2;
+  x = (bounds[m1]->r * cos(RAD(bounds[m1]->theta))
+      + bounds[m2]->r * cos(RAD(bounds[m2]->theta)))/2;
+  y = (bounds[m1]->r * sin(RAD(bounds[m1]->theta))
+      + bounds[m2]->r * sin(RAD(bounds[m2]->theta)))/2;
 
-  theta = ((bounds[m1].theta + bounds[m2].theta + 360) % 180) / 2;
+  //get arithmetic average of angles
+  theta = bounds[m1]->theta + bounds[m2]->theta;
+  while (theta > 180) {
+    theta -= 180;
+  }
+  theta *= 2;
 
   m.m = tan(RAD(theta));
 

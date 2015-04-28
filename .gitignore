@@ -3,3 +3,4 @@ node-console/npm-debug.log
 *.o
 *.s
 LidarTests/runRobot
+LidarTests/lidarProcessorTest
