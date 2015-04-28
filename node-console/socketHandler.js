@@ -22,7 +22,14 @@ module.exports = function(http) {
 
     socket.on('stdin', function(input) {
       console.log('stdin: ' + input);
-      socket.emit('stdout', 'You entered: ' + input + '\n');
+      var args = input.split(' ');
+      if (args[0] === 'drive') {
+        var commandPublisher = redis.createClient();
+        var payload = args[1] + ',' + args[2];
+        commandPublisher.publish('driveCommand', payload);
+        socket.emit('stdout', 'Sent command: ' + payload + '\n');
+      }
+      //socket.emit('stdout', 'You entered: ' + input + '\n');
     });
   });
 }

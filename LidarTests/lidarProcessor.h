@@ -9,11 +9,25 @@
 #define ACCUM_PT(X, Y) accumulator[(X) + (Y) * RANGE_R]
 #define RAD(THETA) ((THETA) * PI / 180)
 
+#define ANGLE_MATCH_THRESHOLD 15;
+
 typedef struct line {
-  float r; //expressed in millimeters
-  float theta; //expressed in radians
+  double r; //expressed in millimeters
+  double theta; //expressed in radians
 } line;
 
-line* houghTransform(REVOLUTION_DATA* lidar_data);
+//point-slope
+typedef struct cartesian_line {
+  double y; //expressed in millimeters
+  double m;
+} line;
+
+typedef struct position {
+  double x;
+  double y;
+  double direction; //in degrees
+} position;
+
+line** houghTransform(REVOLUTION_DATA* lidar_data);
 
 void* processLidar(void* lidar_data);

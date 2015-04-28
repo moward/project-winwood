@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var http = require('http').Server(app);
 var ioHandler = require('./socketHandler');
+var redis = require('redis');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -18,6 +19,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+//send the lidar reading
+app.post('/getLidarReading', function (req, res) {
+  var redisHandler = redis.createClient();
+
+  redisHandler.lrange(req.body.robotName + '.distances', 0, -1, function (err, data) {
+    if (err) {
+      console.log(err);
+      res.send('error');
+    } else {
+      //return json object
+      res.json(data);
+    }
+  })
+});
 
 app.get('/', function(req, res) {
   res.render('index', {});
