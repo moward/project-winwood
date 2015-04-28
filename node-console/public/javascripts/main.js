@@ -46,7 +46,6 @@ $(function() {
             var angle = (90 - i) * Math.PI / 180;
             var x = distances[i] * Math.sin(angle);
             var y = distances[i] * Math.cos(angle);
-            console.log('Adding '+ x + ',' + y);
             data.addRow([x, y]);
           }
         }
