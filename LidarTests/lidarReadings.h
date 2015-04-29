@@ -20,5 +20,5 @@ typedef struct rev_data
 } REVOLUTION_DATA;
 
 float computeRPMSpeed(char byte1, char byte2);
-void *readData ();
+void *readData (void *data);
 #endif

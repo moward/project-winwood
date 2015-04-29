@@ -1,1 +1,1 @@
-sudo ./runRobot 158.130.108.207 robo1
+sudo ./runRobot 192.168.1.2 robo1

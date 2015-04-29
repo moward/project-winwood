@@ -7,6 +7,8 @@
 #include <string.h>
 #include <hiredis.h>
 
+#include "lidarReadings.h"
+#include "lidarProcessor.h"
 #include "redisFunctions.h"
 
 char* robotName = NULL;
@@ -25,8 +27,15 @@ void redisLog(char *message) {
 }
 
 //Post the robot's position to redis
-void redisSetPosition(char *message) {
-
+void redisSetPosition(position *currPosition) {
+  redisReply *reply;
+  //clear previous reading data
+  reply = redisCommand(c, "SET %s.pos.x %.2f", robotName, currPosition->x);
+  freeReplyObject(reply);
+  reply = redisCommand(c, "SET %s.pos.y %.2f", robotName, currPosition->y);
+  freeReplyObject(reply);
+  reply = redisCommand(c, "SET %s.pos.direction %.2f", robotName, currPosition->direction);
+  freeReplyObject(reply);
 }
 
 //Post robot's reading

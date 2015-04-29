@@ -7,6 +7,20 @@
 #include "hiredis.h"
 #include "redisFunctions.h"
 
+//pre-compute the cotangent of whole number degrees abd related numbers
+// to save computation time
+double tanDegrees[360];
+double sCoefficient[360];
+
+void precomputeConstants() {
+  int i;
+
+  for (i = 0; i < 360; i++) {
+    tanDegrees[i] = tan(RAD((i + 90) % 360));
+    sCoefficient[i] = 1 / sqrt(tanDegrees[i] * tanDegrees[i] + 1);
+  }
+}
+
 void* processLidar(void* _lidar_data) {
   REVOLUTION_DATA* lidar_data = _lidar_data;
   int curr_rev_count = 1;
@@ -23,6 +37,8 @@ void* processLidar(void* _lidar_data) {
   currPos.y = 0;
   currPos.direction = 0;
 
+  precomputeConstants();
+
   while (1) {
     //wait for new data
     while (lidar_data->revolutionCount < curr_rev_count);
@@ -32,26 +48,42 @@ void* processLidar(void* _lidar_data) {
       currDistances[i] = lidar_data->distance[i];
     }
 
+    //printf("Starting Hough!\n");
+
     houghSpace = houghTransform(lidar_data);
+
+    //printf("Finding lines!\n");
 
     lines = findLines(houghSpace);
 
-    free(houghSpace);
+    //require valid reading
+    if (lines) {
 
-    getRobotPosition(&currPos, lines);
+      free(houghSpace);
 
-    sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
-        currPos.x, currPos.y, currPos.direction);
+      //printf("Getting Position Hough!\n");
 
-    redisLog(buffer);
+      getRobotPosition(&currPos, lines);
 
-    //post readings to redis
-    redisPostReading(currDistances, NUM_READINGS);
-    //printf("Posted reading to Redis server!\n");
+      //printf("Posting position to Redis!\n");
 
-    //todo: run regression stuff, get location
-    curr_rev_count = lidar_data->revolutionCount + 1;
-    loopCount ++;
+      redisSetPosition(&currPos);
+      /*sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
+          currPos.x, currPos.y, currPos.direction);
+
+      redisLog(buffer);*/
+
+      //printf("Posting reading to Redis!\n");
+
+      //post readings to redis
+      redisPostReading(currDistances, NUM_READINGS);
+
+      //printf("Posted to Redis!\n\n");
+
+      //todo: run regression stuff, get location
+      curr_rev_count = lidar_data->revolutionCount + 1;
+      loopCount ++;
+    }
   }
 }
 
@@ -112,15 +144,14 @@ unsigned short int* houghTransform(REVOLUTION_DATA* lidar_data) {
       for (j = 0; j < RANGE_THETA; j++) {
         //only consider angles that will orient correctly with the current point
         if ((j - i + 450) % 360 < 180) {
-          //get perpendicular slope
-          m = tan(RAD(j + 90));
+          m = tanDegrees[j];
           //basic strategy is to convert to general linear form and use
           //perpendicular distance formula
           //constant term of general linear form
           c = y - m * x;
 
           //radius to nearest point of perpendicular line
-          s = fabs(c) / sqrt(m * m + 1);
+          s = fabs(c) * sCoefficient[j];
 
           //increment point corresponding to current line
           if (s < RANGE_R) {
@@ -249,7 +280,7 @@ int getRobotPosition(position* current, line** bounds) {
 
   l.direction /= 2;
 
-  printf("L line: (%.2f, %.2f) Angle: %.2f\n", l.x, l.y, l.direction);
+  //printf("L line: (%.2f, %.2f) Angle: %.2f\n", l.x, l.y, l.direction);
 
   //find second line
   m.x = (LINE_X(m1) + LINE_X(m2)) / 2;
@@ -261,7 +292,7 @@ int getRobotPosition(position* current, line** bounds) {
   //get arithmetic average of angles
   m.direction = bounds[m1]->theta % 180 + bounds[m2]->theta % 180;
 
-  printf("Bounds m1: %d, m2: %d\n", bounds[m1]->theta, bounds[m2]->theta);
+  //printf("Bounds m1: %d, m2: %d\n", bounds[m1]->theta, bounds[m2]->theta);
 
   if(abs(bounds[m1]->theta % 180 - bounds[m2]->theta % 180) > 90) {
     m.direction = 180 - m.direction;
@@ -269,8 +300,7 @@ int getRobotPosition(position* current, line** bounds) {
 
   m.direction /= 2;
 
-
-  printf("M line: (%.2f, %.2f) Angle: %.2f\n", m.x, m.y, m.direction);
+  //printf("M line: (%.2f, %.2f) Angle: %.2f\n", m.x, m.y, m.direction);
 
   //calculate center of field
   current->x = m.x + l.x;
@@ -281,19 +311,22 @@ int getRobotPosition(position* current, line** bounds) {
   current->y = -current->y;
 
   //Transform step 2: determine most probable robot direction using the two
-  //line directions
-  leastError = 360 * 360;
+  
+  printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
 
+  //line directions
   if (lLen > mLen) {
     majorAxisDirection = l.direction;
   } else {
     majorAxisDirection = m.direction;
   }
 
-  printf("lLen: %.2f, mLen: %.2f\n", lLen, mLen);
+  leastError = 360 * 360;
 
   considerDirection (360 - majorAxisDirection, &leastError, current->direction, &bestDirection);
   considerDirection (180 - majorAxisDirection, &leastError, current->direction, &bestDirection);
+
+  printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction, bestDirection);
 
   current->direction = bestDirection;
 

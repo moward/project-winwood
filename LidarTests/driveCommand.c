@@ -5,6 +5,8 @@
 #include <softPwm.h>
 #include <errno.h>
 #include "hiredis.h"
+#include "lidarReadings.h"
+#include "lidarProcessor.h"
 #include "redisFunctions.h"
 #include "../wiringPiTest/driveControl.h"
 
