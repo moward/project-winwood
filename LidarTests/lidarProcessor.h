@@ -9,7 +9,10 @@
 #define ACCUM_PT(X, Y) accumulator[(X) + (Y) * RANGE_R]
 #define RAD(THETA) ((THETA) * PI / 180)
 
-#define ANGLE_MATCH_THRESHOLD 15;
+#define ANGLE_MATCH_THRESHOLD 15
+
+#define LINE_X(LINE) (bounds[LINE]->r * cos(RAD(bounds[LINE]->theta)))
+#define LINE_Y(LINE) (bounds[LINE]->r * sin(RAD(bounds[LINE]->theta)))
 
 typedef struct line {
   int r; //expressed in millimeters
