@@ -11,10 +11,11 @@
 #include <pthread.h>
 #include <wiringPi.h>
 #include <wiringSerial.h>
+#include "hiredis.h"
 #include "lidarReadings.h"
 #include "lidarProcessor.h"
 #include "redisFunctions.h"
-
+#include "driveCommand.h"
 #define NUM_THREADS 3
 
 int notDead = 1;
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  printf("Starting robot\n");
   redisLog("Starting robot");
 
   wiringPiSetup ();
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]) {
   printf("creating thread\n");
   pthread_create(&threads[0], NULL, readData, &total_data);
   pthread_create(&threads[1], NULL, processLidar, &total_data);
+  //pthread_create(&threads[2], NULL, commandListen, NULL);
   /*while(total_data.revolutionCount < 50) {
     if(oldRevCount != total_data.revolutionCount) {
         oldRevCount = total_data.revolutionCount;

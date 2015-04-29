@@ -77,3 +77,11 @@ int openRedisConnection(char* serverIp, char* _robotName) {
 
   return 1;
 }
+void redisSubscribe(void (*fun)(redisReply*)) {
+  redisReply *reply = redisCommand(c, "SUBSCRIBE driveCommand");
+  freeReplyObject(reply);
+  while(redisGetReply(c,(void **) &reply) == REDIS_OK) {
+    fun(reply);
+    freeReplyObject(reply);
+  }
+}

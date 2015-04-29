@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
   float direction, forwardVelocity;
 
   wiringPiSetup();
-
+  printf("wiringpi complete\n");
   if (configureDriveIO() != 0) {
     printf("%d\n", errno);
   }
