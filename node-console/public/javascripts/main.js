@@ -9,7 +9,8 @@ var convertToPre = function (input) {
 }
 
 var printToConsole = function (text, cssClass) {
-  $('.console-output').append('<span class="' + cssClass + '">' + convertToPre(text) + '</span>');
+  $('.console-output-inner').append('<span class="' + cssClass + '">' + convertToPre(text) + '</span>')
+  $('.console-output').scrollTop($('.console-output-inner').height());
 }
 
 $(function() {
@@ -22,18 +23,18 @@ $(function() {
     printToConsole(out, 'log');
   });
   $('.console-input').keyup(function (e) {
-      if (e.keyCode == 13) {
-          var input = $('.console-input').val();
-          socket.emit('stdin', input);
-          printToConsole(input + '\n', 'user');
-          $(this).val('');
-      }
+    if (e.keyCode == 13) {
+      var input = $('.console-input').val();
+      socket.emit('stdin', input);
+      printToConsole(input + '\n', 'user');
+      $(this).val('');
+    }
   });
 
   var getLidarReading = function() {
     if ($('#graphToggle').prop('checked')) {
       $.post('/getLidarReading', {robotName: 'robo1'}, function (distances) {
-        console.log(distances);
+        //console.log(distances);
 
         //clear data
         data = new google.visualization.DataTable();
@@ -43,10 +44,11 @@ $(function() {
 
         for (var i = 0; i < distances.length; i++) {
           if (distances[i] != -1) {
-            var angle = (90 - i) * Math.PI / 180;
-            var x = distances[i] * Math.sin(angle);
-            var y = distances[i] * Math.cos(angle);
+            var angle = i * Math.PI / 180;
+            var x = distances[i] * Math.cos(angle);
+            var y = distances[i] * Math.sin(angle);
             data.addRow([x, y]);
+            //console.log('data.addRow([' + x + ', ' + y + ']);');
           }
         }
 
