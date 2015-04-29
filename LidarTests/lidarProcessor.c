@@ -40,10 +40,11 @@ void* processLidar(void* _lidar_data) {
 
     getRobotPosition(&currPos, lines);
 
-    sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
+    redisSetPosition(&currPos);
+    /*sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
         currPos.x, currPos.y, currPos.direction);
 
-    redisLog(buffer);
+    redisLog(buffer);*/
 
     //post readings to redis
     redisPostReading(currDistances, NUM_READINGS);
@@ -249,7 +250,7 @@ int getRobotPosition(position* current, line** bounds) {
 
   l.direction /= 2;
 
-  printf("L line: (%.2f, %.2f) Angle: %.2f\n", l.x, l.y, l.direction);
+  //printf("L line: (%.2f, %.2f) Angle: %.2f\n", l.x, l.y, l.direction);
 
   //find second line
   m.x = (LINE_X(m1) + LINE_X(m2)) / 2;
@@ -261,7 +262,7 @@ int getRobotPosition(position* current, line** bounds) {
   //get arithmetic average of angles
   m.direction = bounds[m1]->theta % 180 + bounds[m2]->theta % 180;
 
-  printf("Bounds m1: %d, m2: %d\n", bounds[m1]->theta, bounds[m2]->theta);
+  //printf("Bounds m1: %d, m2: %d\n", bounds[m1]->theta, bounds[m2]->theta);
 
   if(abs(bounds[m1]->theta % 180 - bounds[m2]->theta % 180) > 90) {
     m.direction = 180 - m.direction;
@@ -269,8 +270,7 @@ int getRobotPosition(position* current, line** bounds) {
 
   m.direction /= 2;
 
-
-  printf("M line: (%.2f, %.2f) Angle: %.2f\n", m.x, m.y, m.direction);
+  //printf("M line: (%.2f, %.2f) Angle: %.2f\n", m.x, m.y, m.direction);
 
   //calculate center of field
   current->x = m.x + l.x;
@@ -290,7 +290,7 @@ int getRobotPosition(position* current, line** bounds) {
     majorAxisDirection = m.direction;
   }
 
-  printf("lLen: %.2f, mLen: %.2f\n", lLen, mLen);
+  //printf("lLen: %.2f, mLen: %.2f\n", lLen, mLen);
 
   considerDirection (360 - majorAxisDirection, &leastError, current->direction, &bestDirection);
   considerDirection (180 - majorAxisDirection, &leastError, current->direction, &bestDirection);

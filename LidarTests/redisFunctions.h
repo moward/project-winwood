@@ -3,7 +3,7 @@
 void redisLog(char *message);
 
 //Post the robot's position to redis
-void redisSetPosition(char *message);
+void redisSetPosition(position *currPosition);
 
 //Post robot's reading, include length of array
 void redisPostReading(int* distances, int length);
