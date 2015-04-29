@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "lidarReadings.h"
 #include "lidarProcessor.h"
+#include "hiredis.h"
 #include "redisFunctions.h"
 
 void* processLidar(void* _lidar_data) {
@@ -18,10 +19,10 @@ void* processLidar(void* _lidar_data) {
       currDistances[i] = lidar_data->distance[i];
     }
 
-    if (loopCount % 4 == 0) {
+    //if (loopCount % 4 == 0) {
       redisPostReading(currDistances, NUM_READINGS);
       //printf("Posted reading to Redis server!\n");
-    }
+    //}
 
     //todo: run regression stuff, get location
     curr_rev_count = lidar_data->revolutionCount + 1;

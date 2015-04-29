@@ -9,3 +9,5 @@ void redisSetPosition(char *message);
 void redisPostReading(int* distances, int length);
 
 int openRedisConnection(char* serverIp, char* _robotName);
+
+void redisSubscribe(void (*fun)(redisReply*));
