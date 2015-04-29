@@ -3,7 +3,7 @@ extends layout
 block head
   link(rel='stylesheet', href='/stylesheets/main.css')
   script(src='/socket.io/socket.io.js')
-  script(src='https://www.google.com/jsapi')
+  script(src='/javascripts/svg.min.js')
   script(src='/javascripts/main.js')
 
 block content
@@ -16,5 +16,8 @@ block content
     h2 Graph
     div#graph
     div
+      select#graphType
+        option Lidar Readings
+        option Track Map
       input#graphToggle(type='checkbox')
       | Update
