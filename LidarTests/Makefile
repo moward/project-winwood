@@ -6,4 +6,5 @@ all: lidarReadings.c lidarReadings.h runRobot.c redisFunctions.h redisFunctions.
 	
 processorTest: lidarProcessor.h lidarProcessor.c lidarProcessorTest.c
 	gcc -c lidarProcessor.c -lm
-	gcc -Wall -o lidarProcessorTest lidarProcessor.o lidarProcessorTest.c -lm
+	gcc -c redisFunctionsStub.c
+	gcc -Wall -o lidarProcessorTest redisFunctionsStub.c lidarProcessor.o lidarProcessorTest.c -lm

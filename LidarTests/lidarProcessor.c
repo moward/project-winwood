@@ -11,6 +11,16 @@ void* processLidar(void* _lidar_data) {
   int curr_rev_count = 1;
   int currDistances [NUM_READINGS];
   int i, loopCount;
+  line** lines;
+  unsigned short int* houghSpace;
+
+  char buffer[128];
+
+  position currPos;
+
+  currPos.x = 0;
+  currPos.y = 0;
+  currPos.direction = 0;
 
   while (1) {
     //wait for new data
@@ -22,7 +32,22 @@ void* processLidar(void* _lidar_data) {
     }
 
     if (loopCount % 4 == 0) {
-      //redisPostReading(currDistances, NUM_READINGS);
+
+      houghSpace = houghTransform(lidar_data);
+
+      lines = findLines(houghSpace);
+
+      free(houghSpace);
+
+      getRobotPosition(&currPos, lines);
+
+      sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
+          currPos.x, currPos.y, currPos.direction);
+
+      redisLog(buffer);
+
+      //post readings to redis
+      redisPostReading(currDistances, NUM_READINGS);
       //printf("Posted reading to Redis server!\n");
     }
 
@@ -225,8 +250,6 @@ int getRobotPosition(position* current, line** bounds) {
   }
 
   l.direction /= 2;
-
-  printf("l angle: %f positon: (%4f %4f)\n", l.direction, l.x, l.y);
 
   //find second line
   m.x = (bounds[m1]->r * cos(RAD(bounds[m1]->theta))
