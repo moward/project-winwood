@@ -1,6 +1,4 @@
 /* Project winwood */
-var data, chart, options;
-
 var convertToPre = function (input) {
   return input
       .replace(/\t/g,'    ')
@@ -14,6 +12,7 @@ var printToConsole = function (text, cssClass) {
 }
 
 $(function() {
+  //console stuff
   var socket = io();
 
   socket.on('stdout', function(out) {
@@ -31,96 +30,82 @@ $(function() {
     }
   });
 
-  var getLidarReading = function() {
-    if ($('#graphToggle').prop('checked')) {
-      $.post('/getLidarReading', {robotName: 'robo1'}, function (distances) {
-        //console.log(distances);
+  //graph stuff
+  var graphSize = {x: 600, y: 400};
+  var scale = 0.5;
+  var pointRadius = 6;
+  var carSize = 175 * scale;
 
-        //clear data
-        data = new google.visualization.DataTable();
+  var draw = SVG('graph');
 
-        data.addColumn('number');
-        data.addColumn('number');
-
-        for (var i = 0; i < distances.length; i++) {
-          if (distances[i] != -1) {
-            var angle = i * Math.PI / 180;
-            var x = distances[i] * Math.cos(angle);
-            var y = distances[i] * Math.sin(angle);
-            data.addRow([x, y]);
-            //console.log('data.addRow([' + x + ', ' + y + ']);');
-          }
-        }
-
-        //update chart
-        chart.draw(data, options);
-
-        //run again after 250ms
-        setTimeout(getLidarReading, 250);
-      })
-    }
-  };
-
-  $('#graphToggle').click(getLidarReading)
-
-  getLidarReading();
-});
-
-/* Graph stuff */
-google.load("visualization", "1", {packages:["corechart"]});
-google.setOnLoadCallback(drawChart);
-
-function drawChart() {
-  data = new google.visualization.DataTable();
-  data.addColumn('number');
-  data.addColumn('number');
-
-  /*var radius = 100;
-  for (var i = 0; i < 6.28; i += 0.1) {
-    data.addRow([radius * Math.cos(i), radius * Math.sin(i)]);
+  var drawPoint = function (x, y) {
+    var coords = mapCoords(x, y);
+    return draw.circle(pointRadius)
+      .move(coords[0] - pointRadius / 2, coords[1] - pointRadius / 2)
+      .attr({fill: '#FF4136'});
   }
 
-  // Our central point, which will jiggle.
-  data.addRow([0, 0]);*/
-
-  options = {
-    legend: 'none',
-    colors: ['#087037'],
-    pointSize: 6,
-    'chartArea': {'width': '90%', 'height': '80%'},
-    animation: {
-      duration: 0
-    },
-    /*'vAxis': {
-      'minValue': -1000, 
-      'maxValue': 1000},
-    'hAxis': {
-      'minValue': -1000, 
-      'maxValue': 1000},*/
+  var mapCoords = function (x, y) {
+    return [
+      x * scale + graphSize.x / 2,
+      -y * scale + graphSize.y / 2
+    ];
   };
 
-  chart = new google.visualization.ScatterChart(document.getElementById('graph'));
+  var getGraphReading = function() {
+    if ($('#graphToggle').prop('checked')) {
+      if($('#graphType').val() === 'Lidar Readings') {
+        $.post('/getLidarReading', {robotName: 'robo1'}, function (distances) {
+          scale = 0.3;
 
-  // Start the animation by listening to the first 'ready' event.
-  //google.visualization.events.addOneTimeListener(chart, 'ready', randomWalk);
+          draw.clear();
 
-  // Control all other animations by listening to the 'animationfinish' event.
-  //google.visualization.events.addListener(chart, 'animationfinish', randomWalk);
+          for (var i = 0; i < distances.length; i++) {
+            if (distances[i] != -1) {
+              var angle = i * Math.PI / 180;
+              var x = distances[i] * Math.cos(angle);
+              var y = distances[i] * Math.sin(angle);
+              drawPoint(x, y);
+              //console.log('data.addRow([' + x + ', ' + y + ']);');
+            }
+          }
 
-  chart.draw(data, options);
+          //run again after 250ms
+          setTimeout(getGraphReading, 250);
+        });
+      } else if ($('#graphType').val() === 'Track Map') {
+        $.post('/getPosition', {robotName: 'robo1'}, function (positions) {
+          scale = 0.5;
+          
+          draw.clear();
 
-  /*function randomWalk() {
-    var x = data.getValue(data.getNumberOfRows() - 1, 0);
-    var y = data.getValue(data.getNumberOfRows() - 1, 1);
-    x += 5 * (Math.random() - 0.5);
-    y += 5 * (Math.random() - 0.5);
-    if (x * x + y * y > radius * radius) {
-      // Out of bounds. Bump toward center.
-      x += Math.random() * ((x < 0) ? 5 : -5);
-      y += Math.random() * ((y < 0) ? 5 : -5);
+          //draw outline
+          draw.polygon([
+            mapCoords(510, 360),
+            mapCoords(-510, 360),
+            mapCoords(-510, -360),
+            mapCoords(510, -360)
+          ]).fill('none').stroke({ color: '#39CCCC', opacity: 0.6, width: 2 });
+
+          var roboNames = Object.getOwnPropertyNames(positions);
+
+          for (var i = 0; i < roboNames.length; i++) {
+            var carCoords = mapCoords(positions[roboNames[i]].x, positions[roboNames[i]].y);
+
+            //draw cars
+            var image = draw.image('/car.svg', carSize)
+              .move(carCoords[0] - carSize / 2, carCoords[1] - carSize / 2)
+              .rotate(-1 * positions[roboNames[i]].direction);
+          }
+
+          //run again after 250ms
+          setTimeout(getGraphReading, 250);
+        });
+      }
     }
-    data.setValue(data.getNumberOfRows() - 1, 0, x);
-    data.setValue(data.getNumberOfRows() - 1, 1, y);
-    chart.draw(data, options);
-  }*/
-}
+  };
+
+  $('#graphToggle').click(getGraphReading);
+
+  getGraphReading();
+});

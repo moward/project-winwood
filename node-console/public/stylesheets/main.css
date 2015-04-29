@@ -11,13 +11,13 @@ a {
 div.consoleContainer {
   display: inline-block;
   float: left;
-  width: 500px;
+  width: 600px;
 }
 div.consoleContainer div.console-output {
   font-family: monospace;
   font-size: 0.8rem;
   width: 100%;
-  height: 300px;
+  height: 400px;
   overflow-y: scroll;
   border: #ccc 1px solid;
   margin-bottom: 0;
@@ -44,9 +44,13 @@ div.consoleContainer input.console-input {
 div.graphContainer {
   display: inline-block;
   float: left;
-  width: 400px;
+  width: 600px;
 }
 div.graphContainer div#graph {
   width: 100%;
   height: 400px;
+}
+div.graphContainer input[type=checkbox] {
+  margin-left: 3em;
+  min-height: auto;
 }

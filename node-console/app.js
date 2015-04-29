@@ -32,7 +32,38 @@ app.post('/getLidarReading', function (req, res) {
       //return json object
       res.json(data);
     }
+    redisHandler.quit();
   })
+});
+
+app.post('/getPosition', function (req, res) {
+  var redisHandler = redis.createClient();
+
+  redisHandler.scan(['0', 'match', '*.pos.*'], function (err, data) {
+    if (err) {
+      console.log(err);
+      res.send('error');
+    } else {
+      var keys = data[1];
+      redisHandler.mget(keys, function (err, data) {
+        console.log(keys);
+        console.log(data);
+        if (err) {
+          console.log(err);
+          res.send('error');
+        } else {
+          var positions = {};
+          for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var keyParts = keys[i].split('.');
+            positions[keyParts[0]] = positions[keyParts[0]] || {};
+            positions[keyParts[0]][keyParts[2]] = data[i];
+          }
+          res.json(positions);
+        }
+      });
+    }
+  });
 });
 
 app.get('/', function(req, res) {
