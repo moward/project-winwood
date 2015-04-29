@@ -35,7 +35,7 @@ void* processLidar(void* _lidar_data) {
 /* Creates a PGB Grayscale bitmap file from the given accumulator 
  * Note: result must be freed afterwards
  */
-char* outputNetPBM(unsigned short int* accumulator){
+char* outputNetPBM(unsigned short int* accumulator) {
   int i, length;
   char* buffer = malloc(RANGE_R * RANGE_THETA * 5);
   if (!buffer) {
@@ -60,13 +60,18 @@ char* outputNetPBM(unsigned short int* accumulator){
   return buffer;
 }
 
-line** houghTransform(REVOLUTION_DATA* lidar_data) {
+unsigned short int* houghTransform(REVOLUTION_DATA* lidar_data) {
   int i, j, r;
   double rho, x, y, m, c, s;
-  char* pgmOutput;
+  line** lines;
 
-  //hough accumulator
-  unsigned short int accumulator[RANGE_R * RANGE_THETA];
+  unsigned short int* accumulator
+    = malloc(RANGE_R * RANGE_THETA * sizeof(unsigned short int));
+
+  if (accumulator == NULL) {
+    //could not allocate memory
+    return NULL;
+  }
 
   memset(accumulator, 0, RANGE_R * RANGE_THETA * sizeof(unsigned short int));
 
@@ -83,39 +88,108 @@ line** houghTransform(REVOLUTION_DATA* lidar_data) {
       //for j in [0, 180], add line through point to accumulator
       for (j = 0; j < RANGE_THETA; j++) {
         //only consider angles that will orient correctly with the current point
-        if ((j - i + 270) % 360 < 180) {
+        if ((j - i + 450) % 360 < 180) {
           //get perpendicular slope
           m = tan(RAD(j + 90));
-          //basic strategy is to convert to general linear form and use perpendicular distance formula
+          //basic strategy is to convert to general linear form and use
+          //perpendicular distance formula
           //constant term of general linear form
           c = y - m * x;
 
           //radius to nearest point of perpendicular line
           s = fabs(c) / sqrt(m * m + 1);
 
-          /*if ((int) s == 224 && j == 14) {
-            printf("distance[%d] = %d\n", i, r);
-            //printf(" = (%f, %f)\n", x, y);
-            printf("ACCUM_PT(%d, %d), m = %f, c = %f, RAD(j + 90) = %f\n\n", ((int) s), j, m, c, RAD(j + 90));
-          }*/
-
           //increment point corresponding to current line
           if (s < RANGE_R) {
-            ACCUM_PT(((int) s), j)++;
+            ACCUM_PT((int) s, j)++;
           }
         }
       }
     }
   }
 
-  pgmOutput = outputNetPBM(accumulator);
-
+  /*pgmOutput = outputNetPBM(accumulator);
   printf("%s", pgmOutput);
+  free(pgmOutput);*/
+  
+  return accumulator;
+}
 
-  free(pgmOutput);
+line** findLines(unsigned short int* houghSpace) {
+  int i, j, k, theta;
+  int brightest, brightestR, brightestTheta;
+  unsigned short int* accumulator = houghSpace;
 
-  //todo: detect lines
-  return NULL;
+  //allocate line structs
+  line** lines = malloc(4 * sizeof(line));
+
+  if (lines == NULL) {
+    //could not allocate memory
+    return NULL;
+  }
+
+  for (i = 0; i < 4; i++) {
+    lines[i] = malloc(sizeof(line));
+    if (lines[i] == NULL) {
+      //could not allocate memory
+      return NULL;
+    }
+  }
+
+  brightest = 0;
+  brightestR = brightestTheta = -1;
+
+  //start by finding the brightest point
+  for (i = 0; i < RANGE_R; i++) {
+    for (j = 0; j < RANGE_THETA; j++) {
+      if (ACCUM_PT(i, j) > brightest) {
+        brightest = ACCUM_PT(i, j);
+        brightestR = i;
+        brightestTheta = j;
+      }
+    }
+  }
+
+  if (brightestR == -1 || brightestTheta == -1) {
+    printf("houghTransform: All data zero\n");
+    return NULL;
+  }
+
+  lines[0]->r = brightestR;
+  lines[0]->theta = brightestTheta;
+
+  //then, look for additional points at approximately 90 degrees away
+  for (i = 1; i < 4; i++) {
+    brightest = brightestR = brightestTheta = 0;
+    for (j = 0; j < RANGE_R; j++) {
+      //look with range of 10, i.e. 80 to 100
+      for (k = lines[0]->theta + 90 * i - 10; k < lines[0]->theta + 90 * i + 10; k++) {
+        theta = k % RANGE_THETA;
+        if (ACCUM_PT(j, theta) > brightest) {
+          brightest = ACCUM_PT(j, theta);
+          brightestR = j;
+          brightestTheta = theta;
+        }
+      }
+    }
+
+    lines[i]->r = brightestR;
+    lines[i]->theta = brightestTheta;
+  }
+
+  return lines;
+}
+
+void considerDirection (double direction, double* leastError, double oldDirection,
+    double* bestDirection) {
+  double error = fabs(direction - oldDirection);
+  if (error > 180) {
+    error = 360 - error;
+  }
+  if (error < *leastError) {
+    *bestDirection = direction;
+    *leastError = error;
+  }
 }
 
 /*
@@ -125,73 +199,77 @@ line** houghTransform(REVOLUTION_DATA* lidar_data) {
  */
 int getRobotPosition(position* current, line** bounds) {
   int l1, l2, m1, m2, bestL2;
-  double currError, dTheta, x, y, theta;
+  double currError, newDirection, dTheta, theta, bestDirection, leastError, tempX;
   double bestError = 365 * 365 * 2;
-  cartesian_line l, m;
+  position l, m;
 
   line midLine1, midLine2;
 
   //get parallel lines
-  l1 = l2 = 1;
-  for (l2 = 1; l2 < 4; l2++) {
-    //make m1 and m2 remaining
-    m1 = (l2 + 1) % 3 + 1;
-    m2 = l2 % 3 + 1;
-
-    //add error of l1 and l2
-    dTheta = fabs(bounds[l1]->theta - bounds[l2]->theta);
-    if (dTheta > 180) {
-      dTheta = 360 - dTheta;
-    }
-    currError = dTheta * dTheta;
-
-    //add error of m1 and m2
-    dTheta = fabs(bounds[m1]->theta - bounds[m2]->theta);
-    if (dTheta > 180) {
-      dTheta = 360 - dTheta;
-    }
-    currError += dTheta * dTheta;
-
-    if (currError < bestError) {
-      bestError = currError;
-      bestL2 = l2;
-    }
-  }
-
-  printf("bestError: %f\n", bestError);
+  l1 = 0;
+  l2 = 2;
+  m1 = 1;
+  m2 = 3;
 
   //find first line
-  x = (bounds[l1]->r * cos(RAD(bounds[l1]->theta))
+  l.x = (bounds[l1]->r * cos(RAD(bounds[l1]->theta))
       + bounds[l2]->r * cos(RAD(bounds[l2]->theta)))/2;
-  y = (bounds[l1]->r * sin(RAD(bounds[l1]->theta))
+  l.y = (bounds[l1]->r * sin(RAD(bounds[l1]->theta))
       + bounds[l2]->r * sin(RAD(bounds[l2]->theta)))/2;
 
   //get arithmetic average of angles
-  theta = bounds[l1]->theta + bounds[l2]->theta;
-  while (theta > 180) {
-    theta -= 180;
+  l.direction = bounds[l1]->theta % 180 + bounds[l2]->theta % 180;
+
+  if(abs(bounds[l1]->theta % 180 - bounds[l2]->theta % 180) > 90) {
+    l.direction -= 90;
   }
 
-  l.m = tan(RAD(theta));
+  l.direction /= 2;
 
-  l.y = y - x * (l.m);
+  printf("l angle: %f positon: (%4f %4f)\n", l.direction, l.x, l.y);
 
   //find second line
-  x = (bounds[m1]->r * cos(RAD(bounds[m1]->theta))
+  m.x = (bounds[m1]->r * cos(RAD(bounds[m1]->theta))
       + bounds[m2]->r * cos(RAD(bounds[m2]->theta)))/2;
-  y = (bounds[m1]->r * sin(RAD(bounds[m1]->theta))
+  m.y = (bounds[m1]->r * sin(RAD(bounds[m1]->theta))
       + bounds[m2]->r * sin(RAD(bounds[m2]->theta)))/2;
 
   //get arithmetic average of angles
-  theta = bounds[m1]->theta + bounds[m2]->theta;
-  while (theta > 180) {
-    theta -= 180;
+  m.direction = bounds[m1]->theta % 180 + bounds[m2]->theta % 180;
+
+  if(abs(bounds[m1]->theta % 180 - bounds[m2]->theta % 180) > 90) {
+    m.direction -= 90;
   }
-  theta *= 2;
 
-  m.m = tan(RAD(theta));
+  m.direction /= 2;
 
-  m.y = y - x * (m.m);
+  //calculate center of field
+  current->x = m.x + l.x;
+
+  current->y = m.y + l.y;
+
+  //Transform step 1: negate x and y
+  current->x = -current->x;
+  current->y = -current->y;
+
+  //Transform step 2: determine most probable robot direction using the two
+  //line directions
+  leastError = 360 * 360;
+
+  considerDirection (l.direction, &leastError, current->direction, &bestDirection);
+  considerDirection (m.direction, &leastError, current->direction, &bestDirection);
+  considerDirection (l.direction + 180, &leastError, current->direction, &bestDirection);
+  considerDirection (m.direction + 180, &leastError, current->direction, &bestDirection);
+
+  current->direction = 360 - bestDirection;
+
+  //rotate by new direction
+  tempX = current->x;
+
+  current->x = current->x * cos(RAD(current->direction))
+      - current->y * sin(RAD(current->direction));
+  current->y = current->y * cos(RAD(current->direction))
+      + tempX * sin(RAD(current->direction));
 
   return 1;
 }
