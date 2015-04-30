@@ -25,7 +25,7 @@ typedef struct linkednode
 typedef struct node
 { 
   int cost;
-  int direction;
+  double direction;
   double xCoord;
   double yCoord;
   double speedLimit;
