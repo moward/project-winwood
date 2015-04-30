@@ -12,10 +12,31 @@
 
 void redisSubscribeCallback(redisReply *reply) {
   float direction, magnitude;
-  sscanf(reply->str, "%f,%f", &direction, &magnitude);
-  setDirectionVelocity(direction, magnitude);
+  char* replyStr;
+  if (reply != NULL
+    && reply->type == REDIS_REPLY_ARRAY
+    && reply->elements >= 2
+    && reply->element[2]->type == REDIS_REPLY_STRING) {
+
+    replyStr = reply->element[2]->str;
+    if(sscanf(replyStr, "%f,%f", &direction, &magnitude) != 2) {
+      printf("Illegal driveCommand\n");
+      return;
+    }
+    setDirectionVelocity(direction, magnitude);
+  } else {
+    printf("Unexpected reply structure\n");
+  }
 }
 
 void *commandListen(void* nothing) {
-  redisSubscribe(redisSubscribeCallback);
+  //set up wiringpi
+  
+  wiringPiSetup();
+  printf("wiringpi complete\n");
+  if (configureDriveIO() != 0) {
+    printf("%d\n", errno);
+  }
+
+  redisSubscribe(&redisSubscribeCallback);
 }

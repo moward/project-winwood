@@ -54,6 +54,7 @@ void *readData (void *data) {
   packetCount = 0;
   beginByte = 0;
   //writeFile = fopen(WRITE_FILE, "w");
+  printf("starting reading loop\n");
   while(1) {
       if(beginByte == 0) {
           //starting bit
@@ -203,9 +204,10 @@ void *readData (void *data) {
             //printf("90 packets received!     ");
             computeRPMSpeed(speed[0], speed[1]);
             //printf("Ending RPM: %f\n", rpm_speed);
+            printf("Reading done\n");
           }
       }
       else exit(0);
   }
-  return 0 ;
+  return 0;
 }

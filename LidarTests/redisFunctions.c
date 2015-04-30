@@ -12,6 +12,7 @@
 #include "redisFunctions.h"
 
 char* robotName = NULL;
+char* serverIp = NULL;
 redisContext *c = NULL;
 
 //log an arbitrary string
@@ -68,9 +69,12 @@ void redisPostReading(int* distances, int length) {
   freeReplyObject(reply);
 }
 
-int openRedisConnection(char* serverIp, char* _robotName) {
+int openRedisConnection(char* _serverIp, char* _robotName) {
   //open redis connection
   struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+
+  serverIp = _serverIp;
+
   c = redisConnectWithTimeout(serverIp, 6379, timeout);
   if (c == NULL || c->err) {
     if (c) {
@@ -86,11 +90,25 @@ int openRedisConnection(char* serverIp, char* _robotName) {
 
   return 1;
 }
+
 void redisSubscribe(void (*fun)(redisReply*)) {
-  redisReply *reply = redisCommand(c, "SUBSCRIBE driveCommand");
+  struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+  redisContext *c2 = redisConnectWithTimeout(serverIp, 6379, timeout);
+  if (c2 == NULL || c2->err) {
+    if (c2) {
+      printf("Connection error: %s\n", c2->errstr);
+      redisFree(c2);
+    } else {
+      printf("Connection error: can't allocate redis context\n");
+    }
+    return;
+  }
+
+  redisReply *reply = redisCommand(c2, "SUBSCRIBE driveCommand");
   freeReplyObject(reply);
-  while(redisGetReply(c,(void **) &reply) == REDIS_OK) {
+  while(redisGetReply(c2,(void **) &reply) == REDIS_OK) {
     fun(reply);
     freeReplyObject(reply);
   }
+  printf("Left Subscriber Loop!\n");
 }

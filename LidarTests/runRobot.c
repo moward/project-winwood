@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   printf("creating thread\n");
   pthread_create(&threads[0], NULL, readData, &total_data);
   pthread_create(&threads[1], NULL, processLidar, &total_data);
-  //pthread_create(&threads[2], NULL, commandListen, NULL);
+  pthread_create(&threads[2], NULL, commandListen, NULL);
   /*while(total_data.revolutionCount < 50) {
     if(oldRevCount != total_data.revolutionCount) {
         oldRevCount = total_data.revolutionCount;

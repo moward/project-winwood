@@ -48,11 +48,11 @@ void* processLidar(void* _lidar_data) {
       currDistances[i] = lidar_data->distance[i];
     }
 
-    //printf("Starting Hough!\n");
+    printf("Starting Hough!\n");
 
     houghSpace = houghTransform(lidar_data);
 
-    //printf("Finding lines!\n");
+    printf("Finding lines!\n");
 
     lines = findLines(houghSpace);
 
@@ -61,24 +61,24 @@ void* processLidar(void* _lidar_data) {
 
       free(houghSpace);
 
-      //printf("Getting Position Hough!\n");
+      printf("Getting Position Hough!\n");
 
       getRobotPosition(&currPos, lines);
 
-      //printf("Posting position to Redis!\n");
+      printf("Posting position to Redis!\n");
 
       redisSetPosition(&currPos);
-      /*sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
+      sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
           currPos.x, currPos.y, currPos.direction);
 
-      redisLog(buffer);*/
+      redisLog(buffer);
 
       //printf("Posting reading to Redis!\n");
 
       //post readings to redis
       redisPostReading(currDistances, NUM_READINGS);
 
-      //printf("Posted to Redis!\n\n");
+      printf("Posted to Redis!\n\n");
 
       //todo: run regression stuff, get location
       curr_rev_count = lidar_data->revolutionCount + 1;
@@ -312,7 +312,7 @@ int getRobotPosition(position* current, line** bounds) {
 
   //Transform step 2: determine most probable robot direction using the two
   
-  printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
+  //printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
 
   //line directions
   if (lLen > mLen) {
@@ -326,7 +326,7 @@ int getRobotPosition(position* current, line** bounds) {
   considerDirection (360 - majorAxisDirection, &leastError, current->direction, &bestDirection);
   considerDirection (180 - majorAxisDirection, &leastError, current->direction, &bestDirection);
 
-  printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction, bestDirection);
+  //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction, bestDirection);
 
   current->direction = bestDirection;
 
