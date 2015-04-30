@@ -24,15 +24,15 @@ In the following examples, the image of white on black is the visual representat
 
 ###Hough Transform Example with Clean Field Data
 
-![Hough Space Clean](/images/houghCleanRectange.png)
+![Hough Space Clean](/images/houghCleanRectangle.png)
 
-![Hough Space Clean](/images/houghCleanRectangeGraph.png)
+![Hough Space Clean](/images/houghCleanRectangleGraph.png)
 
 ###Hough Transform Example with Impure Field Data
 
-![Hough Space Noisy](/images/houghDirtyRectange.png)
+![Hough Space Noisy](/images/houghDirtyRectangle.png)
 
-![Hough Space Noisy](/images/houghDirtyRectangeGraph.png)
+![Hough Space Noisy](/images/houghDirtyRectangleGraph.png)
 
 ##4. Line detection and positioning
 
