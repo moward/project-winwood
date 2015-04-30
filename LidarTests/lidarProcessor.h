@@ -25,11 +25,13 @@ typedef struct cartesian_line {
   double m;
 } cartesian_line;
 
+#ifndef POSITION
 typedef struct position {
   double x;
   double y;
   double direction; //in degrees
 } position;
+#endif
 
 unsigned short int* houghTransform(REVOLUTION_DATA* lidar_data);
 
