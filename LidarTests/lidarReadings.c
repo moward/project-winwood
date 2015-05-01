@@ -53,8 +53,8 @@ void *readData (void *data) {
   serialFlush(fd);
   packetCount = 0;
   beginByte = 0;
-  //writeFile = fopen(WRITE_FILE, "w");
   printf("starting reading loop\n");
+  //writeFile = fopen(WRITE_FILE, "w");
   while(1) {
       if(beginByte == 0) {
           //starting bit
@@ -207,7 +207,10 @@ void *readData (void *data) {
             //printf("Reading done\n");
           }
       }
-      else exit(0);
+      else {
+        printf("Lidar readings failure\n");
+        return 0;
+      }
   }
   return 0;
 }

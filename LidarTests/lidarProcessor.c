@@ -15,6 +15,8 @@
 double tanDegrees[360];
 double sCoefficient[360];
 
+int lidarProcessCounts;
+
 void precomputeConstants() {
   int i;
 
@@ -28,7 +30,7 @@ void* processLidar(void* _lidar_data) {
   REVOLUTION_DATA* lidar_data = _lidar_data;
   int curr_rev_count = 1;
   int currDistances [NUM_READINGS];
-  int i, loopCount;
+  int i;
   line** lines;
   unsigned short int* houghSpace;
 
@@ -58,13 +60,14 @@ void* processLidar(void* _lidar_data) {
 
     //printf("Starting Hough!\n");
 
+    //printf("Processing Hough: %d\n", lidar_data->revolutionCount);
     houghSpace = houghTransform(lidar_data);
 
     //printf("Finding lines!\n");
 
     lines = findLines(houghSpace);
 
-    //require valid reading
+    //require valid reading  
     if (lines) {
 
       free(houghSpace);
@@ -90,9 +93,9 @@ void* processLidar(void* _lidar_data) {
       redisLog(buffer);
 
       //todo: run regression stuff, get location
-      curr_rev_count = lidar_data->revolutionCount + 1;
-      loopCount ++;
+      lidarProcessCounts ++;
     }
+    curr_rev_count = lidar_data->revolutionCount + 1;
   }
 }
 
@@ -354,6 +357,7 @@ int getRobotPosition(position* current, line** bounds) {
   }
 
   //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f, error: %.2f\n", majorAxisDirection, current->direction, bestDirection, leastError);
+
   current->direction = bestDirection;
 
   //printf("rebo-relative: (%.2f, %.2f)\n", current->x, current->y);
