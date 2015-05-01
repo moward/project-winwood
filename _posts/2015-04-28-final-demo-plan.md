@@ -17,7 +17,6 @@ The lack of Lidar available and unsuccessful orders placed through Detkin Lab ma
 
 ##The Situations
 
-* Situation 1: One car is traveling slowly and another is behind it and traveling faster. Once the faster car is directly behind the slower car, it will pass the car using another lane
-* Situation 2: Both cars are approaching an intersection and they must negotiate to determine who goes through the intersection first as well as if a car needs to speed up or slow down
-* Situation 3: Both cars are in the same lane and approach a stop sign. The cars should begin to slow down and come to a stop at roughly the same time
-* Situation 4: If time permits, a fourth situation will be created where two cars attempt to merge into the same lane
+* Situation 1: Both cars are approaching an intersection and they must negotiate to determine who goes through the intersection first as well as if a car needs to speed up or slow down
+* Situation 2: Both cars are in the same lane and approach a stop sign. The cars should begin to slow down and come to a stop at roughly the same time
+* Situation 3: If time permits, a third situation will be created where two cars attempt to merge into the same lane
