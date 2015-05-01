@@ -7,6 +7,9 @@
 #include "hiredis.h"
 #include "redisFunctions.h"
 
+#define EXPECTED_MINOR_AXIS 1020
+#define EXPECTED_MAJOR_AXIS 1520
+
 //pre-compute the cotangent of whole number degrees abd related numbers
 // to save computation time
 double tanDegrees[360];
@@ -73,8 +76,16 @@ void* processLidar(void* _lidar_data) {
       //printf("Posting position to Redis!\n");
 
       redisSetPosition(&currPos);
-      sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
+      printf("Robot position: (%.2f, %.2f) Angle: %.2f\n",
           currPos.x, currPos.y, currPos.direction);
+      sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f",
+          currPos.x, currPos.y, currPos.direction);
+
+      redisLog(buffer);
+
+      sprintf(buffer, "LIDAR_STATS: %d, %d",
+          lidar_data->revolutionCount,
+          lidar_data->errorCount);
 
       redisLog(buffer);
 
@@ -235,9 +246,7 @@ line** findLines(unsigned short int* houghSpace) {
 void considerDirection (double direction, double* leastError, double oldDirection,
     double* bestDirection) {
   double error;
-  if (oldDirection > 360) {
-    oldDirection -= 180;
-  }
+
   error = fabs(direction - oldDirection);
   if (error > 180) {
     error = 360 - error;
@@ -314,10 +323,18 @@ int getRobotPosition(position* current, line** bounds) {
 
   //Transform step 2: determine most probable robot direction using the two
   
-  printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
+  //printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
 
   //line directions
-  if (lLen > mLen) {
+  if (abs((int) lLen - EXPECTED_MAJOR_AXIS) < 100) {
+    majorAxisDirection = l.direction;
+  } else if (abs((int) mLen - EXPECTED_MAJOR_AXIS) < 100) {
+    majorAxisDirection = m.direction;
+  } else if (abs((int) lLen - EXPECTED_MINOR_AXIS) < 100) {
+    majorAxisDirection = l.direction + 90;
+  } else if (abs((int) mLen - EXPECTED_MINOR_AXIS) < 100) {
+    majorAxisDirection = m.direction + 90;
+  } else if (lLen > mLen) {
     majorAxisDirection = l.direction;
   } else {
     majorAxisDirection = m.direction;
@@ -325,11 +342,21 @@ int getRobotPosition(position* current, line** bounds) {
 
   leastError = 360 * 360;
 
-  considerDirection (360 - majorAxisDirection, &leastError, current->direction + 180, &bestDirection);
-  considerDirection (180 - majorAxisDirection, &leastError, current->direction + 180, &bestDirection);
+  considerDirection (360 - majorAxisDirection, &leastError, current->direction, &bestDirection);
+  considerDirection (180 - majorAxisDirection, &leastError, current->direction, &bestDirection);
 
-  //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction, bestDirection);
+  if (bestDirection < 0) {
+    bestDirection += 360;
+  }
+
+  if (bestDirection >= 360) {
+    bestDirection -= 360;
+  }
+
+  //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f, error: %.2f\n", majorAxisDirection, current->direction, bestDirection, leastError);
   current->direction = bestDirection;
+
+  //printf("rebo-relative: (%.2f, %.2f)\n", current->x, current->y);
 
   //Transform Step 3: rotate by new direction
   tempX = current->x;

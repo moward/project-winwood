@@ -38,7 +38,7 @@ double distance(position* p1, position* p2) {
   double dx = 0;
   double dy = 0;
   dx = p1->x - p2->x;
-  dy = p1->x - p2->x;
+  dy = p1->y - p2->y;
   return sqrt(dx * dx + dy * dy);
 }
 
@@ -94,14 +94,14 @@ int main(int argc, char *argv[]) {
 void* driver(void* _lidar_data) {
   REVOLUTION_DATA* lidar_data = _lidar_data;
   LINKEDNODE* nextNode;
-  int currRevCount = 1;
+  int currRevCount = 2;
 
   waypointList = malloc(sizeof(LINKEDNODE));
   waypointList->behav = NONE;
   waypointList->next = NULL;
   waypointList->node = malloc(sizeof(NODE));
-  waypointList->node->pos.x = 100;
-  waypointList->node->pos.y = 100;
+  waypointList->node->pos.x = -100;
+  waypointList->node->pos.y = -100;
 
   while(notDead) {
     nextNode = waypointList;
@@ -145,44 +145,50 @@ void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
   position relativeNextPoint;
   position* nextPos = &(nextPoint->node->pos);
 
-  botDirection = RAD(currPos->direction);
+  botDirection = RAD(currPos->direction + 90);
 
-  //if facing wrong direction, pivot
-  directionDiff = nextPos->direction - currPos->direction;
-  if (directionDiff > 180) {
-    directionDiff -= 360;
-  } else if (directionDiff < -180) {
+  //rotate relativeNextPoint
+  relativeNextPoint.x = (nextPos->x - currPos->x) * cos(botDirection)
+      - (nextPos->y - currPos->y) * sin(botDirection);
+  relativeNextPoint.y = (nextPos->x - currPos->x) * sin(botDirection)
+      + (nextPos->y - currPos->y) * cos(botDirection);
+
+  //calculate direction from bot's perspective
+  directionDiff = currPos->direction - atan2(relativeNextPoint.y, relativeNextPoint.x) * 180 / PI + 90;
+  if (directionDiff < -180) {
     directionDiff += 360;
   }
+  if (directionDiff > 180) {
+    directionDiff -= 360;
+  }
+
+  printf("Next point: heading %0.2f, relative position: (%0.2f, %0.2f)\n",
+      directionDiff,
+      relativeNextPoint.x,
+      relativeNextPoint.y);
 
   //pivot calls
   if (directionDiff > 80) {
     printf("Pivot left!\n");
-    //pivot(-0.3);
+    pivot(-0.3);
   } else if (directionDiff < -80) {
     printf("Pivot right!\n");
-    //pivot(0.3);
+    pivot(0.3);
   } else {
-    //drive forward-ish
-    //rotate relativeNextPoint
-    relativeNextPoint.x = (nextPos->x - currPos->x) * cos(-botDirection)
-        - (nextPos->y - currPos->y) * sin(-botDirection);
-    relativeNextPoint.y = (nextPos->x - currPos-> x) * sin(-botDirection)
-        + (nextPos->y - currPos->y) * cos(-botDirection);
-    
-    if (relativeNextPoint.x > 0.05) {
+    //drive forward-ish    
+    if (fabs(relativeNextPoint.x) > 0.05) {
       //calculate circle to get to next point
       center_x = (relativeNextPoint.x * relativeNextPoint.x
           + relativeNextPoint.y * relativeNextPoint.y)
           / (2 * relativeNextPoint.x);
 
-      direction = halfWheelDistance / center_x;
+      direction = halfWheelDistance / center_x * 3;
     } else {
       direction = 0;
     }
 
-    printf("Drive forward!\n");
+    printf("center_x = %.2f, direction = %.2f, Drive forward: %.2f\n", center_x, direction, (float) (direction + BOT_CENTER_OFFSET));
 
-    //setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
+    setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
   }
 }
