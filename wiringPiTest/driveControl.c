@@ -88,3 +88,36 @@ int setDirectionVelocity (float direction, float forwardVelocity) {
 
   return 1;
 }
+
+int stopDriving() {
+  digitalWrite(LEFT_WHEEL_IN1, 0);
+  digitalWrite(LEFT_WHEEL_IN2, 0);
+  digitalWrite(RIGHT_WHEEL_IN1, 0);
+  digitalWrite(RIGHT_WHEEL_IN2, 0);
+  softPwmWrite(LEFT_WHEEL_PWM, 0);
+  softPwmWrite(RIGHT_WHEEL_PWM, 0);
+}
+
+int pivot(double speed) {
+  //boundary checks
+  if (fabs(speed) > 1) {
+    return 0;
+  }
+
+  //set motor direciton
+  if (speed > 0) {
+    digitalWrite(RIGHT_WHEEL_IN1, 1);
+    digitalWrite(RIGHT_WHEEL_IN2, 0);
+    digitalWrite(LEFT_WHEEL_IN1, 0);
+    digitalWrite(LEFT_WHEEL_IN2, 1);
+  } else {
+    digitalWrite(RIGHT_WHEEL_IN1, 0);
+    digitalWrite(RIGHT_WHEEL_IN2, 1);
+    digitalWrite(LEFT_WHEEL_IN1, 1);
+    digitalWrite(LEFT_WHEEL_IN2, 0);
+  }
+
+  //set speed
+  softPwmWrite(LEFT_WHEEL_PWM, abs((int) (speed * 100)));
+  softPwmWrite(RIGHT_WHEEL_PWM, abs((int) (speed * 100)));
+}

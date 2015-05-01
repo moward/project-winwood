@@ -2,3 +2,6 @@
 
 int configureDriveIO ();
 int setDirectionVelocity (float direction, float forwardVelocity);
+
+int pivot(double speed);
+int stopDriving();

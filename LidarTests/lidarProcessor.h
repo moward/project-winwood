@@ -42,3 +42,5 @@ line** findLines(unsigned short int* houghSpace);
 void* processLidar(void* lidar_data);
 
 int getRobotPosition(position* current, line** bounds);
+
+extern position currPos;

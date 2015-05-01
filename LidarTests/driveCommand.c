@@ -23,7 +23,7 @@ void redisSubscribeCallback(redisReply *reply) {
       printf("Illegal driveCommand\n");
       return;
     }
-    setDirectionVelocity(direction, magnitude);
+    //setDirectionVelocity(direction, magnitude);
   } else {
     printf("Unexpected reply structure\n");
   }
@@ -31,12 +31,6 @@ void redisSubscribeCallback(redisReply *reply) {
 
 void *commandListen(void* nothing) {
   //set up wiringpi
-  
-  wiringPiSetup();
-  printf("wiringpi complete\n");
-  if (configureDriveIO() != 0) {
-    printf("%d\n", errno);
-  }
 
   redisSubscribe(&redisSubscribeCallback);
 }

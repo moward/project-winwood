@@ -3,35 +3,32 @@
  *  Header file for movement
  */
 
+#define AT_DESTINATION_THRESH 20
+
+extern pthread_mutex_t waypointListLock;
+
   //could also use this for making enum a type:
  //add whatever behaviors need to be kept track of or added
-typedef enum {STOPSIGN, DESTINATION, INTERSECTION, NONE} behavior;  //(behavior is the type)
+typedef enum {STOP_SIGN, DESTINATION, INTERSECTION, NONE} behavior;  //(behavior is the type)
 
-#ifndef POSITION
-typedef struct position {
-  double x;
-  double y;
-  double direction; //in degrees
-} position;
-#endif
-
-typedef struct linkednode
-{ 
-  behavior behav;
-  LINKEDNODE* next;
-} LINKEDNODE;
+struct linkednode;
 
 //made coordinates doubles because thats what they are in position struct already
 typedef struct node
 { 
   int cost;
-  double direction;
-  double xCoord;
-  double yCoord;
+  position pos;
   double speedLimit;
-  LINKEDNODE* neighbors;
+  struct linkednode* neighbors;
 } NODE;
 
-void closedLoopControlToNextPoint(position currPos, LINKEDNODE nextNode);
+typedef struct linkednode
+{ 
+  behavior behav;
+  NODE* node;
+  struct linkednode* next;
+} LINKEDNODE;
 
-LINKEDNODE* planRoute(position currPos, float destX, float destY);
+void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextNode);
+
+LINKEDNODE* planRoute(position* currPos, NODE* destination);
