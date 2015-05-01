@@ -204,7 +204,7 @@ void *readData (void *data) {
             //printf("90 packets received!     ");
             computeRPMSpeed(speed[0], speed[1]);
             //printf("Ending RPM: %f\n", rpm_speed);
-            printf("Reading done\n");
+            //printf("Reading done\n");
           }
       }
       else exit(0);

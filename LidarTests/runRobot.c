@@ -12,6 +12,7 @@
 #include <wiringPi.h>
 #include <wiringSerial.h>
 #include <math.h>
+#include <time.h>
 #include "hiredis.h"
 #include "lidarReadings.h"
 #include "lidarProcessor.h"
@@ -29,6 +30,10 @@ LINKEDNODE* waypointList;
 
 int notDead = 1;
 
+position currPos;
+
+void* driver(void* nothing);
+
 double distance(position* p1, position* p2) {
   double dx = 0;
   double dy = 0;
@@ -38,8 +43,6 @@ double distance(position* p1, position* p2) {
 }
 
 int main(int argc, char *argv[]) {
-  LINKEDNODE* nextNode;
-
   //verify number of arguments
   if (argc != 3) {
     printf("usage: runRobot <redis_IP_Address> <robot_name>\n");
@@ -74,35 +77,45 @@ int main(int argc, char *argv[]) {
   pthread_create(&threads[0], NULL, readData, &total_data);
   pthread_create(&threads[1], NULL, processLidar, &total_data);
   pthread_create(&threads[2], NULL, commandListen, NULL);
-  pthread_create(&threads[3], NULL, driver, NULL);
+  pthread_create(&threads[3], NULL, driver, &total_data);
   /*while(total_data.revolutionCount < 50) {
     if(oldRevCount != total_data.revolutionCount) {
         oldRevCount = total_data.revolutionCount;
         printf("Dist: %d    Angle: %d \n", total_data.distance[0], total_data.angle[0]);
     }
   }*/
+  while(1);
 
   redisLog("Terminating robot");
 
   return 0;
 }
 
-void driver(void* nothing) {
+void* driver(void* _lidar_data) {
+  REVOLUTION_DATA* lidar_data = _lidar_data;
+  LINKEDNODE* nextNode;
+  int currRevCount = 1;
+
   waypointList = malloc(sizeof(LINKEDNODE));
   waypointList->behav = NONE;
   waypointList->next = NULL;
   waypointList->node = malloc(sizeof(NODE));
-  waypointList->node->pos.x = 0;
-  waypointList->node->pos.y = 0;
+  waypointList->node->pos.x = 100;
+  waypointList->node->pos.y = 100;
 
   while(notDead) {
     nextNode = waypointList;
 
+    while(lidar_data->revolutionCount < currRevCount);
+
+    currRevCount = lidar_data->revolutionCount + 1;
+
     pthread_mutex_lock(&waypointListLock);
 
+    printf("Distance: %f\n", distance(&currPos, &(nextNode->node->pos)));
+
     //if not within certain threshhold of destination
-    if (nextNode != NULL && distance(&currPos, &(nextNode->node->pos)) < AT_DESTINATION_THRESH) {
-      printf("Distance: %f\n", distance(&currPos, &(nextNode->node->pos)));
+    if (nextNode != NULL && distance(&currPos, &(nextNode->node->pos)) > AT_DESTINATION_THRESH) {
       //insert driving code here
       closedLoopControlToNextPoint(&currPos, nextNode);
     } else if (nextNode != NULL) {
@@ -116,7 +129,15 @@ void driver(void* nothing) {
     }
 
     pthread_mutex_unlock(&waypointListLock);
+
+    struct timespec req={0};
+    time_t sec=0;
+    req.tv_sec=sec;
+    req.tv_nsec=100*1000000L;
+
+    nanosleep(&req, NULL);
   }
+  return NULL;
 }
 
 void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
@@ -136,9 +157,11 @@ void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
 
   //pivot calls
   if (directionDiff > 80) {
-    pivot(-0.3);
+    printf("Pivot left!\n");
+    //pivot(-0.3);
   } else if (directionDiff < -80) {
-    pivot(0.3);
+    printf("Pivot right!\n");
+    //pivot(0.3);
   } else {
     //drive forward-ish
     //rotate relativeNextPoint
@@ -158,8 +181,8 @@ void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
       direction = 0;
     }
 
-    printf("Calculated circle_x to be %f\n", center_x);
+    printf("Drive forward!\n");
 
-    setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
+    //setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
   }
 }

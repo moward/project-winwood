@@ -12,8 +12,6 @@
 double tanDegrees[360];
 double sCoefficient[360];
 
-position currPos;
-
 void precomputeConstants() {
   int i;
 
