@@ -12,6 +12,8 @@
 double tanDegrees[360];
 double sCoefficient[360];
 
+int lidarProcessCounts;
+
 void precomputeConstants() {
   int i;
 
@@ -25,7 +27,7 @@ void* processLidar(void* _lidar_data) {
   REVOLUTION_DATA* lidar_data = _lidar_data;
   int curr_rev_count = 1;
   int currDistances [NUM_READINGS];
-  int i, loopCount;
+  int i;
   line** lines;
   unsigned short int* houghSpace;
 
@@ -55,13 +57,14 @@ void* processLidar(void* _lidar_data) {
 
     //printf("Starting Hough!\n");
 
+    //printf("Processing Hough: %d\n", lidar_data->revolutionCount);
     houghSpace = houghTransform(lidar_data);
 
     //printf("Finding lines!\n");
 
     lines = findLines(houghSpace);
 
-    //require valid reading
+    //require valid reading  
     if (lines) {
 
       free(houghSpace);
@@ -73,15 +76,17 @@ void* processLidar(void* _lidar_data) {
       //printf("Posting position to Redis!\n");
 
       redisSetPosition(&currPos);
+      printf("Robot position: (%.2f, %.2f) Angle: %.2f\n",
+          currPos.x, currPos.y, currPos.direction);
       sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
           currPos.x, currPos.y, currPos.direction);
 
       redisLog(buffer);
 
       //todo: run regression stuff, get location
-      curr_rev_count = lidar_data->revolutionCount + 1;
-      loopCount ++;
+      lidarProcessCounts ++;
     }
+    curr_rev_count = lidar_data->revolutionCount + 1;
   }
 }
 
@@ -325,10 +330,10 @@ int getRobotPosition(position* current, line** bounds) {
 
   leastError = 360 * 360;
 
-  considerDirection (360 - majorAxisDirection, &leastError, current->direction + 180, &bestDirection);
-  considerDirection (180 - majorAxisDirection, &leastError, current->direction + 180, &bestDirection);
+  considerDirection (360 - majorAxisDirection, &leastError, current->direction, &bestDirection);
+  considerDirection (180 - majorAxisDirection, &leastError, current->direction, &bestDirection);
 
-  //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction, bestDirection);
+  //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction + 180, bestDirection);
   current->direction = bestDirection;
 
   //Transform Step 3: rotate by new direction

@@ -14,6 +14,7 @@ int configureDriveIO () {
   pinMode(RIGHT_WHEEL_IN2, OUTPUT);
   softPwmCreate (LEFT_WHEEL_PWM, 0, 100);
   softPwmCreate (RIGHT_WHEEL_PWM, 0, 100);
+  return 1;
 }
 
 int setDirectionVelocity (float direction, float forwardVelocity) {
@@ -77,11 +78,11 @@ int setDirectionVelocity (float direction, float forwardVelocity) {
     digitalWrite(RIGHT_WHEEL_IN2, 1);
   }
 
-  printf("(%f,%f)\n", leftVelocity, rightVelocity);
+  //printf("(%f,%f)\n", leftVelocity, rightVelocity);
 
-  printf("softPwmWrite(LEFT_WHEEL_PWM, %d);\nsoftPwmWrite(RIGHT_WHEEL_PWM, %d);\n",
-    abs((int) (leftVelocity * 100)),
-    abs((int) (rightVelocity * 100)));
+  //printf("softPwmWrite(LEFT_WHEEL_PWM, %d);\nsoftPwmWrite(RIGHT_WHEEL_PWM, %d);\n",
+  //  abs((int) (leftVelocity * 100)),
+  //  abs((int) (rightVelocity * 100)));
 
   softPwmWrite(LEFT_WHEEL_PWM, abs((int) (leftVelocity * 100)));
   softPwmWrite(RIGHT_WHEEL_PWM, abs((int) (rightVelocity * 100)));
@@ -106,15 +107,15 @@ int pivot(double speed) {
 
   //set motor direciton
   if (speed > 0) {
-    digitalWrite(RIGHT_WHEEL_IN1, 1);
-    digitalWrite(RIGHT_WHEEL_IN2, 0);
-    digitalWrite(LEFT_WHEEL_IN1, 0);
-    digitalWrite(LEFT_WHEEL_IN2, 1);
-  } else {
     digitalWrite(RIGHT_WHEEL_IN1, 0);
     digitalWrite(RIGHT_WHEEL_IN2, 1);
     digitalWrite(LEFT_WHEEL_IN1, 1);
     digitalWrite(LEFT_WHEEL_IN2, 0);
+  } else {
+    digitalWrite(RIGHT_WHEEL_IN1, 1);
+    digitalWrite(RIGHT_WHEEL_IN2, 0);
+    digitalWrite(LEFT_WHEEL_IN1, 0);
+    digitalWrite(LEFT_WHEEL_IN2, 1);
   }
 
   //set speed
