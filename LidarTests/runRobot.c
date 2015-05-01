@@ -32,6 +32,8 @@ int notDead = 1;
 
 position currPos;
 
+extern int lidarProcessCounts;
+
 void* driver(void* nothing);
 
 double distance(position* p1, position* p2) {
@@ -72,12 +74,13 @@ int main(int argc, char *argv[]) {
   REVOLUTION_DATA total_data;
   total_data.revolutionCount = 0;
   total_data.errorCount = 0;
+
   //int oldRevCount = 0;
   printf("creating thread\n");
   pthread_create(&threads[0], NULL, readData, &total_data);
   pthread_create(&threads[1], NULL, processLidar, &total_data);
   pthread_create(&threads[2], NULL, commandListen, NULL);
-  pthread_create(&threads[3], NULL, driver, &total_data);
+  pthread_create(&threads[3], NULL, driver, NULL);
   /*while(total_data.revolutionCount < 50) {
     if(oldRevCount != total_data.revolutionCount) {
         oldRevCount = total_data.revolutionCount;
@@ -91,8 +94,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void* driver(void* _lidar_data) {
-  REVOLUTION_DATA* lidar_data = _lidar_data;
+void* driver(void* nothin) {
   LINKEDNODE* nextNode;
   int currRevCount = 1;
 
@@ -106,9 +108,9 @@ void* driver(void* _lidar_data) {
   while(notDead) {
     nextNode = waypointList;
 
-    while(lidar_data->revolutionCount < currRevCount);
+    while(lidarProcessCounts < currRevCount);
 
-    currRevCount = lidar_data->revolutionCount + 1;
+    currRevCount = lidarProcessCounts + 1;
 
     pthread_mutex_lock(&waypointListLock);
 
@@ -141,34 +143,33 @@ void* driver(void* _lidar_data) {
 }
 
 void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
-  double center_x, botDirection, directionDiff, direction;
+  double center_x, botDirection, relativeDirection, direction;
   position relativeNextPoint;
   position* nextPos = &(nextPoint->node->pos);
 
   botDirection = RAD(currPos->direction);
 
+  relativeNextPoint.x = (nextPos->x - currPos->x) * cos(-botDirection)
+      - (nextPos->y - currPos->y) * sin(-botDirection);
+  relativeNextPoint.y = (nextPos->x - currPos-> x) * sin(-botDirection)
+      + (nextPos->y - currPos->y) * cos(-botDirection);
+
   //if facing wrong direction, pivot
-  directionDiff = nextPos->direction - currPos->direction;
-  if (directionDiff > 180) {
-    directionDiff -= 360;
-  } else if (directionDiff < -180) {
-    directionDiff += 360;
-  }
+  relativeDirection = atan2(relativeNextPoint.y, relativeNextPoint.x)
+      * 180 / PI;
+
+  printf("Relative Direction: %0.2f\n", relativeDirection);
 
   //pivot calls
-  if (directionDiff > 80) {
+  if (relativeDirection > 35) {
     printf("Pivot left!\n");
-    //pivot(-0.3);
-  } else if (directionDiff < -80) {
+    pivot(-0.1);
+  } else if (relativeDirection < -35) {
     printf("Pivot right!\n");
-    //pivot(0.3);
+    pivot(0.1);
   } else {
     //drive forward-ish
     //rotate relativeNextPoint
-    relativeNextPoint.x = (nextPos->x - currPos->x) * cos(-botDirection)
-        - (nextPos->y - currPos->y) * sin(-botDirection);
-    relativeNextPoint.y = (nextPos->x - currPos-> x) * sin(-botDirection)
-        + (nextPos->y - currPos->y) * cos(-botDirection);
     
     if (relativeNextPoint.x > 0.05) {
       //calculate circle to get to next point
@@ -183,6 +184,7 @@ void closedLoopControlToNextPoint(position* currPos, LINKEDNODE* nextPoint) {
 
     printf("Drive forward!\n");
 
+    setDirectionVelocity(0, 0.2);
     //setDirectionVelocity((float) (direction + BOT_CENTER_OFFSET), 0.2);
   }
 }
