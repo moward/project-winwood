@@ -28,6 +28,7 @@ module.exports = function(http) {
         var payload = args[1] + ',' + args[2];
         commandPublisher.publish('driveCommand', payload);
         socket.emit('stdout', 'Sent command: ' + payload + '\n');
+        socket.emit('stdlog', 'Destination: ' + args[1] + ',' + args[2] + '\n');
       }
       //socket.emit('stdout', 'You entered: ' + input + '\n');
     });

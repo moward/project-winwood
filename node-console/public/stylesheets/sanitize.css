@@ -27,4 +27,5 @@ table{border-collapse:collapse;border-spacing:0}
 @media screen{[hidden~=screen]{display:inherit}
 [hidden~=screen]:not(:active):not(:focus):not(:target){clip:rect(0 0 0 0)!important;position:absolute!important}
 }
+h2 {font-size: 1.3em;}
 /*# sourceMappingURL=sanitize.css.map */

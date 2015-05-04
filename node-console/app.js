@@ -67,7 +67,7 @@ app.post('/getPosition', function (req, res) {
 });
 
 app.get('/', function(req, res) {
-  res.render('index', {});
+  res.render('index', {title: 'Project Winwood Web Console'});
 });
 
 // catch 404 and forward to error handler
@@ -82,7 +82,7 @@ ioHandler(http);
 
 http.listen(3000, function() {
   console.log('listening on 3000');
-})
+});
 
 // error handlers
 

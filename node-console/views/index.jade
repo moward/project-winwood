@@ -7,6 +7,9 @@ block head
   script(src='/javascripts/main.js')
 
 block content
+  div#titleDiv
+    img(src='winwood-logo.png')
+    h1#title Project Winwood Interactive Web Console
   div.consoleContainer
     h2 Console
     div.console-output
@@ -21,3 +24,33 @@ block content
         option Track Map
       input#graphToggle(type='checkbox')
       | Update
+  h2#dataTableHeader Data Table
+  table#dataTable
+    tr
+      th(colspan='2') Robo1
+      th(colspan='2') Robo2
+    tr
+      td.label pos.x
+      td#robo1_pos_x.data -
+      td.label pos.x
+      td#robo2_pos_x.data -
+    tr
+      td.label pos.y
+      td#robo1_pos_y.data -
+      td.label pos.y
+      td#robo2_pos_y.data -
+    tr
+      td.label pos.direction
+      td#robo1_pos_direction.data -
+      td.label pos.direction
+      td#robo2_pos_direction.data -
+    tr
+      td.label revolutionCount
+      td#robo1_revolutionCount.data -
+      td.label revolutionCount
+      td#robo2_revolutionCount.data -
+    tr
+      td.label errorCount
+      td#robo1_errorCount.data -
+      td.label errorCount
+      td#robo2_errorCount.data -
