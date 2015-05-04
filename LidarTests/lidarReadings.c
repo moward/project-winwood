@@ -53,6 +53,7 @@ void *readData (void *data) {
   serialFlush(fd);
   packetCount = 0;
   beginByte = 0;
+  printf("starting reading loop\n");
   //writeFile = fopen(WRITE_FILE, "w");
   while(1) {
       if(beginByte == 0) {
@@ -203,9 +204,13 @@ void *readData (void *data) {
             //printf("90 packets received!     ");
             computeRPMSpeed(speed[0], speed[1]);
             //printf("Ending RPM: %f\n", rpm_speed);
+            //printf("Reading done\n");
           }
       }
-      else exit(0);
+      else {
+        printf("Lidar readings failure\n");
+        return 0;
+      }
   }
-  return 0 ;
+  return 0;
 }

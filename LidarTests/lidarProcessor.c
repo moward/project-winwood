@@ -7,10 +7,15 @@
 #include "hiredis.h"
 #include "redisFunctions.h"
 
+#define EXPECTED_MINOR_AXIS 1020
+#define EXPECTED_MAJOR_AXIS 1520
+
 //pre-compute the cotangent of whole number degrees abd related numbers
 // to save computation time
 double tanDegrees[360];
 double sCoefficient[360];
+
+int lidarProcessCounts;
 
 void precomputeConstants() {
   int i;
@@ -25,13 +30,11 @@ void* processLidar(void* _lidar_data) {
   REVOLUTION_DATA* lidar_data = _lidar_data;
   int curr_rev_count = 1;
   int currDistances [NUM_READINGS];
-  int i, loopCount;
+  int i;
   line** lines;
   unsigned short int* houghSpace;
 
   char buffer[128];
-
-  position currPos;
 
   currPos.x = 0;
   currPos.y = 0;
@@ -48,15 +51,23 @@ void* processLidar(void* _lidar_data) {
       currDistances[i] = lidar_data->distance[i];
     }
 
+    //printf("Posting reading to Redis!\n");
+
+    //post readings to redis
+    redisPostReading(currDistances, NUM_READINGS);
+
+    //printf("Posted to Redis!\n\n");
+
     //printf("Starting Hough!\n");
 
+    //printf("Processing Hough: %d\n", lidar_data->revolutionCount);
     houghSpace = houghTransform(lidar_data);
 
     //printf("Finding lines!\n");
 
     lines = findLines(houghSpace);
 
-    //require valid reading
+    //require valid reading  
     if (lines) {
 
       free(houghSpace);
@@ -68,22 +79,23 @@ void* processLidar(void* _lidar_data) {
       //printf("Posting position to Redis!\n");
 
       redisSetPosition(&currPos);
-      /*sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f\n",
+      printf("Robot position: (%.2f, %.2f) Angle: %.2f\n",
+          currPos.x, currPos.y, currPos.direction);
+      sprintf(buffer, "Robot position: (%.2f, %.2f) Angle: %.2f",
           currPos.x, currPos.y, currPos.direction);
 
-      redisLog(buffer);*/
+      redisLog(buffer);
 
-      //printf("Posting reading to Redis!\n");
+      sprintf(buffer, "LIDAR_STATS: %d, %d",
+          lidar_data->revolutionCount,
+          lidar_data->errorCount);
 
-      //post readings to redis
-      redisPostReading(currDistances, NUM_READINGS);
-
-      //printf("Posted to Redis!\n\n");
+      redisLog(buffer);
 
       //todo: run regression stuff, get location
-      curr_rev_count = lidar_data->revolutionCount + 1;
-      loopCount ++;
+      lidarProcessCounts ++;
     }
+    curr_rev_count = lidar_data->revolutionCount + 1;
   }
 }
 
@@ -236,7 +248,9 @@ line** findLines(unsigned short int* houghSpace) {
 
 void considerDirection (double direction, double* leastError, double oldDirection,
     double* bestDirection) {
-  double error = fabs(direction - oldDirection);
+  double error;
+
+  error = fabs(direction - oldDirection);
   if (error > 180) {
     error = 360 - error;
   }
@@ -312,10 +326,18 @@ int getRobotPosition(position* current, line** bounds) {
 
   //Transform step 2: determine most probable robot direction using the two
   
-  printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
+  //printf("lLen: %.2f, mLenL %.2f\n", lLen, mLen);
 
   //line directions
-  if (lLen > mLen) {
+  if (abs((int) lLen - EXPECTED_MAJOR_AXIS) < 100) {
+    majorAxisDirection = l.direction;
+  } else if (abs((int) mLen - EXPECTED_MAJOR_AXIS) < 100) {
+    majorAxisDirection = m.direction;
+  } else if (abs((int) lLen - EXPECTED_MINOR_AXIS) < 100) {
+    majorAxisDirection = l.direction + 90;
+  } else if (abs((int) mLen - EXPECTED_MINOR_AXIS) < 100) {
+    majorAxisDirection = m.direction + 90;
+  } else if (lLen > mLen) {
     majorAxisDirection = l.direction;
   } else {
     majorAxisDirection = m.direction;
@@ -326,17 +348,29 @@ int getRobotPosition(position* current, line** bounds) {
   considerDirection (360 - majorAxisDirection, &leastError, current->direction, &bestDirection);
   considerDirection (180 - majorAxisDirection, &leastError, current->direction, &bestDirection);
 
-  printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f\n", majorAxisDirection, current->direction, bestDirection);
+  if (bestDirection < 0) {
+    bestDirection += 360;
+  }
+
+  if (bestDirection >= 360) {
+    bestDirection -= 360;
+  }
+
+  //printf("majorAxisDirection: %.2f, oldDirection: %.2f, newDirection: %.2f, error: %.2f\n", majorAxisDirection, current->direction, bestDirection, leastError);
 
   current->direction = bestDirection;
+
+  //printf("rebo-relative: (%.2f, %.2f)\n", current->x, current->y);
 
   //Transform Step 3: rotate by new direction
   tempX = current->x;
 
-  current->x = current->x * cos(RAD(current->direction))
-      - current->y * sin(RAD(current->direction));
-  current->y = current->y * cos(RAD(current->direction))
-      + tempX * sin(RAD(current->direction));
+  current->x = current->x * cos(RAD(current->direction + 180))
+      - current->y * sin(RAD(current->direction + 180));
+  current->y = current->y * cos(RAD(current->direction + 180))
+      + tempX * sin(RAD(current->direction + 180));
+
+  //flip around since lidar is mounted backwards
 
   return 1;
 }
