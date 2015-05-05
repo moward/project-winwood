@@ -3,6 +3,7 @@ layout: default
 title: Home
 ---
 
+![Final Robot](/images/final_robot.jpg)
 
 #Project Winwood
 
