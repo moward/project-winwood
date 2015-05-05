@@ -7,7 +7,7 @@ title: Final Demo
 
 This is a brief explanation of our project as well as a video showing how our web console can send commands to the robot to navigate to a point using closed loop control.
 
-<iframe width="800" height="450" src="https://www.youtube.com/embed/S0Al3Lv9Hoc" frameborder="0" allowfullscreen></iframe>
+<iframe width="800" height="450" src="https://www.youtube.com/embed/n0VZiIdv8so" frameborder="0" allowfullscreen></iframe>
 
 ##Demo Presentation
 
