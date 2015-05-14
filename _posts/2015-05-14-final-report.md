@@ -3,7 +3,8 @@ layout: post
 title: Final Project Report
 ---
 
-<object data="/assets/FinalReport.pdf" type="application/pdf" style="width:100%; height: 600px;">
+<div style="width:100%; height: 600px;">
+<object data="/assets/FinalReport.pdf" type="application/pdf" width="100%" height="100%">
 It appears you don't have a PDF plugin for this browser. No biggie... you can download the file [here](/assets/FinalReport.pdf)
 </object></div>
 
