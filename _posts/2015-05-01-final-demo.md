@@ -3,6 +3,10 @@ layout: post
 title: Final Demo
 ---
 
+##Final Project Report
+
+The final project report, availabile in PDF format, is available [here](/assets/FinalReport.pdf). It outlines our final system design in detail as well as provides useful information about our project.
+
 ##Demo Video
 
 This is a brief explanation of our project as well as a video showing how our web console can send commands to the robot to navigate to a point using closed loop control.
@@ -15,4 +19,4 @@ This is a brief explanation of our project as well as a video showing how our we
 
 ##Final Robot and Web Console Code
 
-In the end, we were able to implement close-loop control and autonomous A-to-B navigation using the localization algorithm based upon the Hector transform. All of the source code for our project is viewable on our [GitHub repository.](https://github.com/moward/project-winwood)
+In the end, we were able to implement close-loop control and autonomous A-to-B navigation using the localization algorithm based upon the Hector transform. All of the source code for our project is available on our [GitHub repository.](https://github.com/moward/project-winwood)
