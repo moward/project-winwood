@@ -3,10 +3,6 @@ layout: post
 title: Final Demo
 ---
 
-##Final Project Report
-
-The final project report, availabile in PDF format, is available [here](/assets/FinalReport.pdf). It outlines our final system design in detail as well as provides useful information about our project.
-
 ##Demo Video
 
 This is a brief explanation of our project as well as a video showing how our web console can send commands to the robot to navigate to a point using closed loop control.
